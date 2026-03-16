@@ -1,0 +1,382 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+    .ai-container {
+        max-width: 1000px;
+        margin: 20px auto;
+        padding: 20px;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .step-card {
+        margin-bottom: 30px;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        background: #f9f9f9;
+    }
+    .step-header {
+        border-bottom: 2px solid #79aec8;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+        color: #447e9b;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .agent-tag {
+        font-size: 0.8em;
+        background: #79aec8;
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        text-transform: uppercase;
+    }
+    .topic-list {
+        list-style: none;
+        padding: 0;
+    }
+    .topic-item {
+        padding: 10px;
+        border-bottom: 1px solid #eee;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+    .topic-item:hover {
+        background: #eef;
+    }
+    .topic-item.selected {
+        background: #d1e7dd;
+        border-left: 4px solid #198754;
+    }
+    .ai-content-area {
+        width: 100%;
+        min-height: 300px;
+        margin-top: 10px;
+        font-family: monospace;
+        white-space: pre-wrap;
+        background: #fdfdfd;
+        padding: 15px;
+        border: 1px solid #ccc;
+    }
+    .btn-ai {
+        background: #79aec8;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+    .btn-ai:hover {
+        background: #609ab6;
+    }
+    .btn-save {
+        background: #198754;
+    }
+    .btn-save:hover {
+        background: #157347;
+    }
+    .spinner {
+        display: none;
+        width: 20px;
+        height: 20px;
+        border: 3px solid rgba(255,255,255,.3);
+        border-radius: 50%;
+        border-top-color: #fff;
+        animation: spin 1s ease-in-out infinite;
+        margin-left: 10px;
+    }
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    .loading .spinner {
+        display: inline-block;
+    }
+    .loading .btn-text {
+        display: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ai-container">
+    <h1>🤖 AI Blog Article Writing Interface</h1>
+    <p>Powered by multiple specialized agents to help you write high-quality blog content.</p>
+
+    <!-- Step 1: Topics Agent -->
+    <div class="step-card" id="step-1">
+        <div class="step-header">
+            <h3>1. Content Strategy & Topic Selection</h3>
+            <span class="agent-tag">topics_agent</span>
+        </div>
+        <div class="form-row">
+            <label for="theme">Main Theme/Interests:</label>
+            <input type="text" id="theme" value="Tenant Rights and Protection" style="width: 70%;">
+            <button id="btn-get-topics" class="btn-ai">
+                <span class="btn-text">Generate Topics</span>
+                <div class="spinner"></div>
+            </button>
+        </div>
+        <div id="topics-output" class="topic-list" style="margin-top: 20px;">
+            <!-- Topics will be loaded here -->
+        </div>
+    </div>
+
+    <!-- Step 2: Blog Author & SEO & Review -->
+    <div class="step-card" id="step-2" style="display: none;">
+        <div class="step-header">
+            <h3>2. Content Generation & Review</h3>
+            <span class="agent-tag">blog_author + seo_optimizer + fact_checker_reviewer</span>
+        </div>
+        <div id="selected-topic-display" style="font-weight: bold; margin-bottom: 10px;"></div>
+        <button id="btn-generate-content" class="btn-ai">
+            <span class="btn-text">Write Article & Optimize</span>
+            <div class="spinner"></div>
+        </button>
+        <div id="content-output-container" style="display: none;">
+            <div style="margin-bottom: 20px;">
+                <h4>Research Briefing (Contextual Alignment):</h4>
+                <div id="research-brief-output" style="background: #eef; padding: 15px; border-radius: 4px; border-left: 4px solid #79aec8; font-style: italic;"></div>
+            </div>
+
+            <h4>Article Content (Markdown):</h4>
+            <div id="content-output" class="ai-content-area" contenteditable="true"></div>
+            
+            <div style="display: flex; gap: 20px; margin-top: 20px;">
+                <div style="flex: 1;">
+                    <h4>SEO Meta:</h4>
+                    <div id="seo-output" style="background: #eee; padding: 10px; border-radius: 4px;"></div>
+                </div>
+                <div style="flex: 1;">
+                    <h4>Fact-Check Review:</h4>
+                    <div id="review-output" style="background: #fff3cd; padding: 10px; border-radius: 4px; color: #856404; border: 1px solid #ffeeba;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 3: Featured Image -->
+    <div class="step-card" id="step-3" style="display: none;">
+        <div class="step-header">
+            <h3>3. Visual Asset Creation</h3>
+            <span class="agent-tag">featured_image_creator</span>
+        </div>
+        <button id="btn-generate-image" class="btn-ai">
+            <span class="btn-text">Generate Featured Image</span>
+            <div class="spinner"></div>
+        </button>
+        <div id="image-output-container" style="display: none; margin-top: 20px; text-align: center;">
+            <img id="image-preview" src="" style="max-width: 512px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
+            <p id="image-prompt-display" style="font-style: italic; margin-top: 10px; color: #666;"></p>
+        </div>
+    </div>
+
+    <!-- Final Save -->
+    <div id="final-actions" style="display: none; text-align: right; margin-top: 30px;">
+        <button id="btn-save-post" class="btn-ai btn-save">
+            <span class="btn-text">Save as Draft to Database</span>
+            <div class="spinner"></div>
+        </button>
+    </div>
+</div>
+
+<script>
+    const state = {
+        theme: '',
+        selectedTopic: '',
+        content: '',
+        seo: {},
+        review: '',
+        imageUrl: '',
+        imagePrompt: ''
+    };
+
+    const getCookie = (name) => {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    };
+
+    const csrftoken = getCookie('csrftoken');
+
+    const toggleLoading = (btnId, isLoading) => {
+        const btn = document.getElementById(btnId);
+        if (isLoading) {
+            btn.classList.add('loading');
+            btn.disabled = true;
+        } else {
+            btn.classList.remove('loading');
+            btn.disabled = false;
+        }
+    };
+
+    document.getElementById('btn-get-topics').addEventListener('click', async () => {
+        const theme = document.getElementById('theme').value;
+        state.theme = theme;
+        toggleLoading('btn-get-topics', true);
+        
+        try {
+            const response = await fetch('/admin/blog/ai-generate-api/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify({ step: 'get_topics', theme })
+            });
+            const data = await response.json();
+            
+            const output = document.getElementById('topics-output');
+            output.innerHTML = `<h4>Suggested Topics:</h4>`;
+            
+            // Assuming the AI returns a text block, we can split it or just display it.
+            // For a better UX, let's treat each line as a topic if it looks like one.
+            const lines = data.result.split('\n').filter(l => l.trim() && (l.match(/^\d\./) || l.includes('Recommendation')));
+            
+            lines.forEach(line => {
+                const div = document.createElement('div');
+                div.className = 'topic-item';
+                div.innerText = line;
+                div.onclick = () => {
+                    document.querySelectorAll('.topic-item').forEach(el => el.classList.remove('selected'));
+                    div.classList.add('selected');
+                    state.selectedTopic = line.replace(/^\d\.\s*/, '').split(' - ')[0].trim();
+                    document.getElementById('step-2').style.display = 'block';
+                    document.getElementById('selected-topic-display').innerText = 'Selected Topic: ' + state.selectedTopic;
+                    document.getElementById('step-2').scrollIntoView({ behavior: 'smooth' });
+                };
+                output.appendChild(div);
+            });
+        } catch (error) {
+            alert('Error fetching topics');
+        } finally {
+            toggleLoading('btn-get-topics', false);
+        }
+    });
+
+    document.getElementById('btn-generate-content').addEventListener('click', async () => {
+        toggleLoading('btn-generate-content', true);
+        
+        try {
+            const response = await fetch('/admin/blog/ai-generate-api/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify({ step: 'generate_content', topic: state.selectedTopic })
+            });
+            const data = await response.json();
+            
+            state.content = data.result.content;
+            state.review = data.result.review;
+            state.seo = data.result.seo;
+            state.research_brief = data.result.research_brief;
+
+            document.getElementById('content-output-container').style.display = 'block';
+            document.getElementById('research-brief-output').innerText = state.research_brief;
+            document.getElementById('content-output').innerText = state.content;
+            document.getElementById('seo-output').innerText = state.seo;
+            document.getElementById('review-output').innerText = state.review;
+            
+            document.getElementById('step-3').style.display = 'block';
+            document.getElementById('final-actions').style.display = 'block';
+        } catch (error) {
+            alert('Error generating content');
+        } finally {
+            toggleLoading('btn-generate-content', false);
+        }
+    });
+
+    document.getElementById('btn-generate-image').addEventListener('click', async () => {
+        toggleLoading('btn-generate-image', true);
+        
+        try {
+            const response = await fetch('/admin/blog/ai-generate-api/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify({ 
+                    step: 'generate_image', 
+                    title: state.selectedTopic,
+                    content: state.content
+                })
+            });
+            const data = await response.json();
+            
+            state.imageUrl = data.result.image_url;
+            state.imagePrompt = data.result.image_prompt;
+
+            if (state.imageUrl) {
+                document.getElementById('image-output-container').style.display = 'block';
+                document.getElementById('image-preview').src = state.imageUrl;
+                document.getElementById('image-prompt-display').innerText = "Prompt: " + state.imagePrompt;
+            } else {
+                alert('Image generation failed or API key missing. Prompt: ' + state.imagePrompt);
+            }
+        } catch (error) {
+            alert('Error generating image');
+        } finally {
+            toggleLoading('btn-generate-image', false);
+        }
+    });
+
+    document.getElementById('btn-save-post').addEventListener('click', async () => {
+        toggleLoading('btn-save-post', true);
+        
+        // Final SEO parsing (very basic for this demo)
+        const seoText = state.seo;
+        const meta_title = state.selectedTopic;
+        const meta_description = "A comprehensive guide on " + state.selectedTopic;
+        const tags = "AI, Generated, " + state.theme;
+
+        try {
+            const response = await fetch('/admin/blog/ai-generate-api/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify({ 
+                    step: 'save_post',
+                    title: state.selectedTopic,
+                    content: document.getElementById('content-output').innerText,
+                    meta_title,
+                    meta_description,
+                    tags,
+                    image_url: state.imageUrl
+                })
+            });
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                alert('Article saved successfully to drafts!');
+                window.location.href = '/admin/blog/post/';
+            } else {
+                alert('Error saving post: ' + data.message);
+            }
+        } catch (error) {
+            alert('Error saving post');
+        } finally {
+            toggleLoading('btn-save-post', false);
+        }
+    });
+</script>
+{% endblock %}

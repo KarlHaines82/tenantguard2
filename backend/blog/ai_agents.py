@@ -1,0 +1,213 @@
+import os
+import openai
+from django.conf import settings
+import requests
+from django.core.files.base import ContentFile
+from .models import Post, Category
+from django.utils.text import slugify
+from pathlib import Path
+
+class BaseAgent:
+    def __init__(self, model="gpt-4-turbo-preview"):
+        self.model = model
+        self.api_key = os.getenv("OPENAI_API_KEY")
+        if self.api_key:
+            self.client = openai.OpenAI(api_key=self.api_key)
+        else:
+            self.client = None
+
+    def call_ai(self, system_prompt, user_prompt, temperature=0.7):
+        if not self.client:
+            return f"[SIMULATED] Response for: {user_prompt[:50]}..."
+        
+        response = self.client.chat.completions.create(
+            model=self.model,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+            temperature=temperature,
+        )
+        return response.choices[0].message.content
+
+class ContextualResearcherAgent(BaseAgent):
+    """Reads project documentation to ensure the blog is aligned with TenantGuard's mission."""
+    
+    def gather_context(self):
+        base_path = Path(settings.BASE_DIR).parent
+        important_files = [
+            "docs/control-plane/01_PROJECT_CONTEXT/PRODUCT_VISION.md",
+            "docs/control-plane/01_PROJECT_CONTEXT/TARGET_USERS.md",
+            "knowledge-repo/knowledge/DOMAIN_MODEL.md",
+            "knowledge-repo/knowledge/INTERNAL_RULES_AND_HEURISTICS.md"
+        ]
+        
+        context_parts = []
+        for rel_path in important_files:
+            full_path = base_path / rel_path
+            if full_path.exists():
+                with open(full_path, 'r') as f:
+                    content = f.read()
+                    context_parts.append(f"--- FILE: {rel_path} ---\n{content}")
+        
+        return "\n\n".join(context_parts)
+
+    def research_topic(self, topic):
+        context = self.gather_context()
+        system_prompt = (
+            "You are the Head of Research at TenantGuard. Your job is to analyze a blog topic "
+            "and provide a 'Briefing Note' for the author. This note MUST align the topic with "
+            "TenantGuard's mission, specific audience (Tennessee tenants), and brand voice (Precision, Clarity)."
+        )
+        user_prompt = (
+            f"Topic: {topic}\n\n"
+            f"Here is the TenantGuard Project Context:\n{context}\n\n"
+            "Please provide a Briefing Note that includes:\n"
+            "1. Core Narrative: How this topic serves our mission.\n"
+            "2. Audience Angle: How this specifically helps a tenant in Davidson County, TN.\n"
+            "3. Key Facts: Important domain rules or entities from our context to mention.\n"
+            "4. Tone Guide: Specific advice on how to write this for a 'stressed non-lawyer'."
+        )
+        return self.call_ai(system_prompt, user_prompt)
+
+class TopicsAgent(BaseAgent):
+    def get_topics(self, theme="Tenant Rights and Protection"):
+        system_prompt = (
+            "You are an expert content strategist specializing in housing and tenant rights. "
+            "Your goal is to come up with 5 engaging, timely, and valuable blog post topics."
+        )
+        user_prompt = (
+            f"Based on the theme '{theme}', suggest 5 interesting blog post topics for a modern audience. "
+            "Explain why each topic is interesting. Choose one as the 'Top Recommendation'."
+        )
+        return self.call_ai(system_prompt, user_prompt)
+
+class BlogAuthorAgent(BaseAgent):
+    def write_article(self, topic, research_brief):
+        system_prompt = (
+            "You are a professional blog author for TenantGuard. You write with empathy, clarity, and precision. "
+            "You avoid legal jargon unless explaining it to a non-lawyer. Your goal is to provide actionable leverage to tenants."
+        )
+        user_prompt = (
+            f"Topic: {topic}\n"
+            f"Research Briefing:\n{research_brief}\n\n"
+            "Write a comprehensive blog post based on this brief. "
+            "Include an introduction, several informative sections with subheadings, and a conclusion. "
+            "Use Markdown for formatting."
+        )
+        return self.call_ai(system_prompt, user_prompt)
+
+class FeaturedImageCreatorAgent(BaseAgent):
+    def generate_image_prompt(self, title, content):
+        system_prompt = (
+            "You are a creative director specialized in visual storytelling for blogs. "
+            "Your task is to describe a compelling featured image that complements the blog's content."
+        )
+        user_prompt = (
+            f"Given the blog title '{title}' and its content, describe a visually striking featured image. "
+            "Provide a detailed prompt that could be used in DALL-E 3."
+        )
+        return self.call_ai(system_prompt, user_prompt)
+
+    def generate_image(self, prompt):
+        if not self.client:
+            return None
+        
+        try:
+            response = self.client.images.generate(
+                model="dall-e-3",
+                prompt=prompt,
+                size="1024x1024",
+                quality="standard",
+                n=1,
+            )
+            image_url = response.data[0].url
+            return image_url
+        except Exception as e:
+            print(f"Image generation error: {e}")
+            return None
+
+class SEOOptimizerAgent(BaseAgent):
+    def optimize(self, title, content):
+        system_prompt = (
+            "You are an SEO specialist. Your goal is to maximize the visibility of the blog post."
+        )
+        user_prompt = (
+            f"Optimize this blog post for SEO.\nTitle: {title}\nContent: {content[:1000]}...\n"
+            "Provide: 1. A catchy meta title (max 60 chars), 2. A compelling meta description (max 160 chars), "
+            "3. 5-10 relevant tags (comma-separated)."
+        )
+        return self.call_ai(system_prompt, user_prompt)
+
+class FactCheckerReviewerAgent(BaseAgent):
+    def review(self, content):
+        system_prompt = (
+            "You are a meticulous fact-checker and editor at TenantGuard. "
+            "Your goal is to ensure accuracy, clarity, and professionalism."
+        )
+        user_prompt = (
+            f"Review this blog post content for factual accuracy and grammatical errors. "
+            "List any concerns or suggested corrections. If it's good to go, say 'Review Passed'.\n\n{content}"
+        )
+        return self.call_ai(system_prompt, user_prompt)
+
+class BlogGeneratorWorkflow:
+    def __init__(self):
+        self.researcher_agent = ContextualResearcherAgent()
+        self.topics_agent = TopicsAgent()
+        self.author_agent = BlogAuthorAgent()
+        self.image_agent = FeaturedImageCreatorAgent()
+        self.seo_agent = SEOOptimizerAgent()
+        self.reviewer_agent = FactCheckerReviewerAgent()
+
+    def run_step_1(self, theme):
+        return self.topics_agent.get_topics(theme)
+
+    def run_step_2(self, topic):
+        # New Research Step
+        brief = self.researcher_agent.research_topic(topic)
+        content = self.author_agent.write_article(topic, brief)
+        review = self.reviewer_agent.review(content)
+        seo = self.seo_agent.optimize(topic, content)
+        return {
+            "research_brief": brief,
+            "content": content,
+            "review": review,
+            "seo": seo
+        }
+
+    def run_step_3(self, title, content):
+        image_prompt = self.image_agent.generate_image_prompt(title, content)
+        image_url = self.image_agent.generate_image(image_prompt)
+        return {
+            "image_prompt": image_prompt,
+            "image_url": image_url
+        }
+
+    def save_post(self, title, content, meta_title, meta_description, tags, author_id, image_url=None):
+        from django.contrib.auth.models import User
+        author = User.objects.get(id=author_id)
+        
+        post = Post.objects.create(
+            title=title,
+            content=content,
+            author=author,
+            meta_title=meta_title,
+            meta_description=meta_description,
+            status='draft'
+        )
+        
+        if tags:
+            tag_list = [t.strip() for t in tags.split(",")]
+            post.tags.add(*tag_list)
+
+        if image_url:
+            try:
+                response = requests.get(image_url, timeout=10)
+                if response.status_code == 200:
+                    file_name = f"{slugify(title)}.png"
+                    post.featured_image.save(file_name, ContentFile(response.content), save=True)
+            except Exception as e:
+                print(f"Error saving image: {e}")
+        
+        return post
