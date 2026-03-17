@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { ChevronDown, User, LogOut, Settings } from 'lucide-react'
 import { useSession, signIn, signOut } from "next-auth/react"
+import { useRouter } from 'next/router'
 
 const Navbar = ({
   onDashboard,
@@ -20,6 +21,7 @@ const Navbar = ({
 }) => {
   const { data: session } = useSession()
   const currentUser = session?.user
+  const router = useRouter()
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false)
   const [isMobileUserOpen, setIsMobileUserOpen] = React.useState(false)
@@ -33,8 +35,25 @@ const Navbar = ({
   ]
 
   const handleNavClick = (sectionId: string) => {
-    if (onNavigate) {
+    if (sectionId === 'blog') {
+      router.push('/blog')
+    } else if (router.pathname !== '/') {
+      // If not on home page, navigate home first then maybe scroll
+      if (sectionId === 'home') {
+        router.push('/')
+      } else {
+        router.push(`/#${sectionId}`)
+      }
+    } else if (onNavigate) {
       onNavigate(sectionId)
+    } else {
+      // Fallback if onNavigate not provided but on home page
+      const element = document.getElementById(sectionId)
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' })
+      } else if (sectionId === 'home') {
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+      }
     }
     setIsMobileMenuOpen(false)
     setIsMobileUserOpen(false)
@@ -64,7 +83,7 @@ const Navbar = ({
           
           <div 
             className="flex items-center space-x-3 cursor-pointer"
-            onClick={() => onNavigate && onNavigate('home')}
+            onClick={() => handleNavClick('home')}
           >
             <img src="/assets/logo.png" alt="TenantGuard" className="h-8 w-8" />
             <span 

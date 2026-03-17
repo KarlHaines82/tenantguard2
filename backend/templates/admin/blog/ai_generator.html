@@ -244,10 +244,19 @@
             const output = document.getElementById('topics-output');
             output.innerHTML = `<h4>Suggested Topics:</h4>`;
             
-            // Assuming the AI returns a text block, we can split it or just display it.
-            // For a better UX, let's treat each line as a topic if it looks like one.
-            const lines = data.result.split('\n').filter(l => l.trim() && (l.match(/^\d\./) || l.includes('Recommendation')));
+            // Improved parsing: take all non-empty lines that aren't too short,
+            // or use a more relaxed filter if the strict one yields nothing.
+            let lines = data.result.split('\n').filter(l => l.trim() && (l.match(/^\d\./) || l.includes('Recommendation')));
             
+            if (lines.length === 0) {
+                // Fallback to any non-empty lines that look like topics
+                lines = data.result.split('\n').filter(l => l.trim().length > 10);
+            }
+            
+            if (lines.length === 0) {
+                output.innerHTML += `<p>No structured topics found. Raw response: ${data.result}</p>`;
+            }
+
             lines.forEach(line => {
                 const div = document.createElement('div');
                 div.className = 'topic-item';

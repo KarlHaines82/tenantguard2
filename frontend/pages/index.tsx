@@ -314,7 +314,7 @@ export default function Home() {
               <Button size="lg" className="bg-white text-red-800 hover:bg-gray-100" onClick={() => handleStartIntake('tenant')}>
                 Get Started as Tenant
               </Button>
-              <Button size="lg" variant="outline" className="text-white border-white hover:bg-red-700" onClick={() => handleStartIntake('attorney')}>
+              <Button size="lg" variant="outline" className="text-white border-white bg-transparent hover:bg-red-700" onClick={() => handleStartIntake('attorney')}>
                 Join as Attorney
               </Button>
             </div>
@@ -322,7 +322,7 @@ export default function Home() {
         </section>
       </main>
 
-      <footer className="bg-gray-900 text-white py-12">
+      <footer id="contact" className="bg-gray-900 text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             <div>

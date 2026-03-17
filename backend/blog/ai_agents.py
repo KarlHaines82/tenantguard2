@@ -1,5 +1,6 @@
 import os
 import openai
+from openai import OpenAI
 from django.conf import settings
 import requests
 from django.core.files.base import ContentFile
@@ -12,7 +13,7 @@ class BaseAgent:
         self.model = model
         self.api_key = os.getenv("OPENAI_API_KEY")
         if self.api_key:
-            self.client = openai.OpenAI(api_key=self.api_key)
+            self.client = OpenAI(api_key=self.api_key)
         else:
             self.client = None
 

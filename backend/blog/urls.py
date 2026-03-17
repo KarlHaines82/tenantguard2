@@ -11,8 +11,4 @@ urlpatterns = [
     path('categories/', CategoryListView.as_view(), name='category-list'),
     path('posts/<slug:slug>/comments/', CommentCreateView.as_view(), name='comment-create'),
     path('feed/', LatestEntriesFeed(), name='post-feed'),
-    
-    # AI Admin Tools
-    path('admin/ai-generator/', ai_generator_view, name='ai-generator'),
-    path('admin/blog/ai-generate-api/', ai_generate_api, name='ai-generate-api'),
 ]
