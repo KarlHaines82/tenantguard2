@@ -6,6 +6,11 @@ __pycache__/
 # C extensions
 *.so
 
+#Nextjs stuff
+package-lock.json
+node_modules/
+
+
 # Distribution / packaging
 .Python
 build/
