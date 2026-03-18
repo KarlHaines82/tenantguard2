@@ -9,7 +9,7 @@ __pycache__/
 #Nextjs stuff
 package-lock.json
 node_modules/
-
+ssl_certs/
 
 # Distribution / packaging
 .Python

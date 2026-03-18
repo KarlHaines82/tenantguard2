@@ -12,6 +12,9 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 import os
 from datetime import timedelta
 from pathlib import Path
+from dotenv import load_dotenv
+
+load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -99,6 +102,16 @@ WSGI_APPLICATION = "core.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
+_db_options = {}
+if os.getenv("DB_SSLMODE"):
+    _db_options["sslmode"] = os.getenv("DB_SSLMODE")
+if os.getenv("DB_SSLROOTCERT"):
+    _db_options["sslrootcert"] = os.getenv("DB_SSLROOTCERT")
+if os.getenv("DB_SSLCERT"):
+    _db_options["sslcert"] = os.getenv("DB_SSLCERT")
+if os.getenv("DB_SSLKEY"):
+    _db_options["sslkey"] = os.getenv("DB_SSLKEY")
+
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
@@ -107,6 +120,7 @@ DATABASES = {
         "PASSWORD": os.getenv("DB_PASSWORD", ""),
         "HOST": os.getenv("DB_HOST", "localhost"),
         "PORT": os.getenv("DB_PORT", "5432"),
+        "OPTIONS": _db_options,
     }
 }
 
