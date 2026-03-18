@@ -68,6 +68,7 @@ jobs:
         with:
           host: ${{ secrets.STAGING_HOST }}
           username: ${{ secrets.STAGING_SSH_USER }}
+          password: ${{ secrets.STAGING_SSH_PASSWORD }}
           key: ${{ secrets.STAGING_SSH_KEY }}
           envs: IMAGE_TAG,ARTIFACT_REGISTRY,CLOUD_SQL_CONN
           script: |
