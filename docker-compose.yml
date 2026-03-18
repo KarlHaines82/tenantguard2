@@ -10,6 +10,7 @@ services:
       - DJANGO_SETTINGS_MODULE=core.settings
     volumes:
       - media_files:/app/media
+      - ./ssl_certs:/ssl_certs:ro
     expose:
       - "8000"
     depends_on:
