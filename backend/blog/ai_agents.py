@@ -1,5 +1,7 @@
 import os
+import re
 import openai
+import markdown as md
 from openai import OpenAI
 from django.conf import settings
 import requests
@@ -188,10 +190,21 @@ class BlogGeneratorWorkflow:
     def save_post(self, title, content, meta_title, meta_description, tags, author_id, image_url=None):
         from django.contrib.auth.models import User
         author = User.objects.get(id=author_id)
-        
+
+        # Strip markdown bold/italic markers and leading heading characters from the title
+        clean_title = re.sub(r'^\s*#+\s*', '', title.strip())   # remove leading # chars
+        clean_title = re.sub(r'[\*_]{1,3}(.*?)[\*_]{1,3}', r'\1', clean_title)  # remove **..** / *..* / __..__ etc.
+        clean_title = clean_title.strip('"').strip()  # remove any surrounding quotes left by the AI
+
+        # Convert markdown body to HTML so CKEditor-stored content renders correctly
+        clean_content = md.markdown(
+            content,
+            extensions=['extra', 'nl2br', 'sane_lists'],
+        )
+
         post = Post.objects.create(
-            title=title,
-            content=content,
+            title=clean_title,
+            content=clean_content,
             author=author,
             meta_title=meta_title,
             meta_description=meta_description,

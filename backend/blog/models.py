@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils.text import slugify
-from ckeditor.fields import RichTextField
+from django_summernote.fields import SummernoteTextField
 from taggit.managers import TaggableManager
 
 class Category(models.Model):
@@ -29,7 +29,7 @@ class Post(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='blog_posts')
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, related_name='posts')
     featured_image = models.ImageField(upload_to='blog/images/', blank=True, null=True)
-    content = RichTextField()
+    content = SummernoteTextField()
     excerpt = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

@@ -301,6 +301,75 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Modern Technology Stack */}
+        <section className="py-16 bg-gray-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">Modern Technology Stack</h2>
+              <p className="text-lg text-gray-600">Built for scalability and security</p>
+            </div>
+            <div className="grid md:grid-cols-3 gap-8">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg text-red-800">Frontend</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2 text-sm">
+                  {[
+                    ["Next.js", "16.1.6"],
+                    ["React", "18.2.0"],
+                    ["TypeScript", "5.9.3"],
+                    ["Tailwind CSS", "4.2.1"],
+                    ["NextAuth.js", "4.22.1"],
+                  ].map(([name, version]) => (
+                    <div key={name} className="flex justify-between">
+                      <span className="text-gray-700">{name}</span>
+                      <span className="text-gray-400 font-mono">{version}</span>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg text-red-800">Backend</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2 text-sm">
+                  {[
+                    ["Django", "5.0.3"],
+                    ["Django REST Framework", "3.15.1"],
+                    ["SimpleJWT", "5.3.1"],
+                    ["django-allauth", "0.61.1"],
+                    ["OpenAI SDK", "2.28.0"],
+                  ].map(([name, version]) => (
+                    <div key={name} className="flex justify-between">
+                      <span className="text-gray-700">{name}</span>
+                      <span className="text-gray-400 font-mono">{version}</span>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg text-red-800">AI & Data</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2 text-sm">
+                  {[
+                    ["GPT-4 Turbo", "Preview"],
+                    ["DALL-E", "3"],
+                    ["pypdf", "4.3.1"],
+                    ["PostgreSQL", "18.2"],
+                    ["Multi-agent pipeline", "Custom"],
+                  ].map(([name, version]) => (
+                    <div key={name} className="flex justify-between">
+                      <span className="text-gray-700">{name}</span>
+                      <span className="text-gray-400 font-mono">{version}</span>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </section>
+
         {/* CTA Section */}
         <section className="py-20 bg-red-800 text-white">
           <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">

@@ -15,6 +15,22 @@ module.exports = {
         "background-secondary": "var(--color-backgroundSecondary)",
         text: "var(--color-text)",
         "text-secondary": "var(--color-textSecondary)",
+        // shadcn/ui component tokens
+        card: {
+          DEFAULT: "var(--color-cardBg)",
+          foreground: "var(--color-text)",
+        },
+        muted: {
+          DEFAULT: "var(--color-backgroundTertiary)",
+          foreground: "var(--color-textSecondary)",
+        },
+        accent: {
+          DEFAULT: "var(--color-backgroundTertiary)",
+          foreground: "var(--color-text)",
+        },
+        foreground: "var(--color-text)",
+        border: "var(--color-border)",
+        input: "var(--color-border)",
       },
     },
   },

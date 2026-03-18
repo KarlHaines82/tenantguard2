@@ -5,10 +5,25 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
 import { useSession, signIn } from 'next-auth/react'
 import axios from 'axios'
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/'
+
+interface Message {
+  id: number
+  sender_type: 'user' | 'ai' | 'staff'
+  content: string
+  timestamp: string
+  is_read: boolean
+}
+
+const SENDER_LABEL: Record<string, string> = {
+  ai: 'AI Assistant',
+  staff: 'TenantGuard Staff',
+}
+
 const Chat = () => {
   const { data: session } = useSession()
   const [isOpen, setIsOpen] = useState(false)
-  const [messages, setMessages] = useState<any[]>([])
+  const [messages, setMessages] = useState<Message[]>([])
   const [newMessage, setNewMessage] = useState('')
   const [loading, setLoading] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -27,13 +42,13 @@ const Chat = () => {
     }
   }, [messages])
 
+  const authHeader = () => ({
+    Authorization: `Bearer ${(session as any)?.access_token}`,
+  })
+
   const fetchMessages = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/api/chat/messages/', {
-        headers: {
-          Authorization: `Bearer ${(session as any).access_token}`
-        }
-      })
+      const response = await axios.get(`${API_BASE}chat/messages/`, { headers: authHeader() })
       setMessages(response.data)
     } catch (error) {
       console.error('Error fetching messages:', error)
@@ -46,15 +61,14 @@ const Chat = () => {
 
     setLoading(true)
     try {
-      await axios.post('http://localhost:8000/api/chat/messages/', {
-        content: newMessage
-      }, {
-        headers: {
-          Authorization: `Bearer ${(session as any).access_token}`
-        }
-      })
+      // POST returns the full updated conversation including the AI reply
+      const response = await axios.post(
+        `${API_BASE}chat/messages/`,
+        { content: newMessage },
+        { headers: authHeader() }
+      )
+      setMessages(response.data)
       setNewMessage('')
-      fetchMessages()
     } catch (error) {
       console.error('Error sending message:', error)
     } finally {
@@ -74,62 +88,90 @@ const Chat = () => {
   }
 
   return (
-    <div className="fixed bottom-6 right-6 w-80 md:w-96 z-50 animate-in slide-in-from-bottom-5">
-      <Card className="shadow-2xl border-primary/20">
+    <div className="fixed bottom-6 right-6 w-80 md:w-96 z-50">
+      <Card className="shadow-2xl border-primary/20 overflow-hidden">
         <CardHeader className="bg-primary text-white p-4 rounded-t-xl flex flex-row items-center justify-between">
-          <CardTitle className="text-lg">Chat with us</CardTitle>
-          <button onClick={() => setIsOpen(false)}>
+          <div>
+            <CardTitle className="text-base">Legal Assistant</CardTitle>
+            <p className="text-xs opacity-80 mt-0.5">Ask about your tenant rights</p>
+          </div>
+          <button onClick={() => setIsOpen(false)} className="hover:opacity-70 transition-opacity">
             <X className="h-5 w-5" />
           </button>
         </CardHeader>
+
         <CardContent className="p-0 flex flex-col h-96">
           {!session ? (
-            <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-              <p className="text-gray-600 mb-4">Please log in to start a conversation.</p>
-              <Button onClick={() => signIn()}>Log In</Button>
+            <div className="flex-1 flex flex-col items-center justify-center p-6 text-center gap-3">
+              <MessageCircle className="h-10 w-10 text-gray-300" />
+              <p className="text-gray-600 text-sm">
+                Please log in to chat with our legal assistant.
+              </p>
+              <Button size="sm" onClick={() => signIn()}>Log In to Chat</Button>
             </div>
           ) : (
             <>
-              <div 
-                ref={scrollRef}
-                className="flex-1 overflow-y-auto p-4 space-y-4"
-              >
-                {messages.map((m) => (
-                  <div 
-                    key={m.id} 
-                    className={`flex ${m.sender_name === session.user?.username ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div className={`max-w-[80%] p-3 rounded-2xl ${
-                      m.sender_name === session.user?.username 
-                        ? 'bg-primary text-white rounded-tr-none' 
-                        : 'bg-gray-100 text-gray-800 rounded-tl-none'
-                    }`}>
-                      <p className="text-sm">{m.content}</p>
-                      <p className="text-[10px] opacity-70 mt-1">
-                        {new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </p>
+              <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3">
+                {messages.length === 0 && !loading && (
+                  <div className="text-center text-gray-400 text-sm mt-8 space-y-1">
+                    <p className="font-medium">Hi! I'm your TenantGuard assistant.</p>
+                    <p>Ask me anything about your tenant rights in Tennessee.</p>
+                  </div>
+                )}
+
+                {messages.map((m) => {
+                  const isUser = m.sender_type === 'user'
+                  return (
+                    <div key={m.id} className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`max-w-[82%] ${isUser ? '' : 'space-y-1'}`}>
+                        {!isUser && (
+                          <p className="text-[10px] font-semibold text-gray-400 px-1">
+                            {SENDER_LABEL[m.sender_type] ?? m.sender_type}
+                          </p>
+                        )}
+                        <div className={`p-3 rounded-2xl text-sm ${
+                          isUser
+                            ? 'bg-primary text-white rounded-tr-none'
+                            : m.sender_type === 'staff'
+                              ? 'bg-blue-50 text-blue-900 border border-blue-100 rounded-tl-none'
+                              : 'bg-gray-100 text-gray-800 rounded-tl-none'
+                        }`}>
+                          <p className="leading-relaxed whitespace-pre-wrap">{m.content}</p>
+                          <p className="text-[10px] opacity-60 mt-1 text-right">
+                            {new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+
+                {loading && (
+                  <div className="flex justify-start">
+                    <div className="bg-gray-100 rounded-2xl rounded-tl-none px-4 py-3">
+                      <div className="flex gap-1 items-center h-4">
+                        <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                        <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                        <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" />
+                      </div>
                     </div>
                   </div>
-                ))}
-                {messages.length === 0 && (
-                  <p className="text-center text-gray-400 text-sm mt-10">
-                    No messages yet. Send a message to start!
-                  </p>
                 )}
               </div>
-              <form onSubmit={handleSendMessage} className="p-4 border-t border-gray-100 flex gap-2">
+
+              <form onSubmit={handleSendMessage} className="p-3 border-t border-gray-100 flex gap-2">
                 <input
                   type="text"
-                  placeholder="Type a message..."
+                  placeholder="Ask about your rights..."
                   className="flex-1 px-3 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm"
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   disabled={loading}
                 />
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   disabled={loading || !newMessage.trim()}
-                  className="p-2 bg-primary text-white rounded-lg hover:opacity-90 disabled:opacity-50"
+                  className="p-2 bg-primary text-white rounded-lg hover:opacity-90 disabled:opacity-50 transition-opacity"
                 >
                   <Send className="h-4 w-4" />
                 </button>

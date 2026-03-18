@@ -100,7 +100,7 @@ const Navbar = ({
                 key={item.id}
                 variant="ghost"
                 style={{ color: 'var(--color-textSecondary)' }}
-                className="hover:opacity-80"
+                className=""
                 onClick={() => handleNavClick(item.id)}
               >
                 {item.label}
@@ -182,7 +182,7 @@ const Navbar = ({
               <Button 
                 variant="ghost" 
                 style={{ color: 'var(--color-textSecondary)' }} 
-                className="hover:opacity-80" 
+                className="" 
                 onClick={() => signIn()}
               >
                 Login
