@@ -1,5 +1,18 @@
 import axios from 'axios';
 
+// Media URLs in the DB were saved with the internal Docker hostname.
+// Strip the origin so nginx serves them via its /media/ location block.
+export function fixMediaUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  try {
+    const parsed = new URL(url);
+    if (parsed.hostname === 'backend') return parsed.pathname + parsed.search;
+  } catch {
+    // already a relative path
+  }
+  return url;
+}
+
 const baseURL =
   typeof window === 'undefined'
     ? process.env.INTERNAL_API_URL || 'http://backend:8000/api/'

@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Calendar, User, ArrowRight, Tag, Search, FileText } from 'lucide-react'
 import Navbar from '@/components/Navbar'
 import Link from 'next/link'
-import { getPosts, getCategories } from '@/lib/api'
+import { getPosts, getCategories, fixMediaUrl } from '@/lib/api'
 
 interface Post {
   id: number
@@ -99,7 +99,7 @@ export default function BlogIndex({ posts: initialPosts, categories }: BlogIndex
                 <div className="aspect-video relative overflow-hidden bg-gray-100">
                   {post.featured_image ? (
                     <img 
-                      src={post.featured_image} 
+                      src={fixMediaUrl(post.featured_image)!}
                       alt={post.title}
                       className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
                     />

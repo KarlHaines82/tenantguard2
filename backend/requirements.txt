@@ -15,3 +15,4 @@ openai==2.28.0
 requests==2.31.0
 pypdf==4.3.1
 markdown==3.7
+whitenoise==6.8.2

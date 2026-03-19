@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Calendar, User, ArrowLeft, Send } from 'lucide-react'
 import Navbar from '@/components/Navbar'
 import Link from 'next/link'
-import { getPost, createComment } from '@/lib/api'
+import { getPost, createComment, fixMediaUrl } from '@/lib/api'
 import { useSession, signIn } from 'next-auth/react'
 
 interface Comment {
@@ -138,7 +138,7 @@ export default function BlogPost({ post: initialPost }: { post: PostDetail }) {
           {post.featured_image && (
             <div className="aspect-video relative rounded-2xl overflow-hidden mb-12 shadow-lift">
               <img 
-                src={post.featured_image} 
+                src={fixMediaUrl(post.featured_image)!}
                 alt={post.title}
                 className="object-cover w-full h-full"
               />
