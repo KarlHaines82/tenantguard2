@@ -3,7 +3,7 @@ FROM node:24-alpine AS builder
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm install
+RUN npm ci
 
 COPY . .
 
@@ -18,7 +18,6 @@ FROM node:24-alpine AS runner
 
 ENV NODE_ENV=production
 
-COPY --from=builder . .
 WORKDIR /app
 
 RUN addgroup --system --gid 1001 nodejs 
@@ -27,6 +26,7 @@ RUN adduser --system --uid 1001 nextjs
 # COPY --from=builder /app/public ./public
 # COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 # COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app ./
 
 USER nextjs
 
@@ -35,5 +35,5 @@ ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
 # CMD ["node", "server.js"]
-CMD ["npm", "run", "dev"]
+CMD ["npx", "next"]
 
