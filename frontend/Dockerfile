@@ -1,4 +1,4 @@
-FROM node:25-alpine AS builder
+FROM node:24-alpine AS builder
 
 WORKDIR /app
 
@@ -11,10 +11,10 @@ COPY . .
 ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 
-RUN npx next build
+RUN npm run build
 
 # Production image
-FROM node:25-alpine AS runner
+FROM node:24-alpine AS runner
 
 ENV NODE_ENV=production
 
@@ -33,5 +33,5 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-CMD ["node", ".next/standalone/server.js"]
+CMD ["node", "server.js"]
 
