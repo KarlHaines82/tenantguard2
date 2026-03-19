@@ -40,6 +40,16 @@ ALLOWED_HOSTS = [
     "frontend",
 ]
 
+# Trust the X-Forwarded-Proto header from nginx so Django knows requests are HTTPS
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+# Required for CSRF to work when Django is behind an HTTPS reverse proxy
+CSRF_TRUSTED_ORIGINS = [
+    "https://tenantguard.net",
+    "https://www.tenantguard.net",
+    "https://dev.tenantguard.net",
+]
+
 
 # Application definition
 
