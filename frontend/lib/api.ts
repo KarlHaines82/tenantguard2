@@ -1,8 +1,11 @@
 import axios from 'axios';
 
-const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/',
-});
+const baseURL =
+  typeof window === 'undefined'
+    ? process.env.INTERNAL_API_URL || 'http://backend:8000/api/'
+    : process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/';
+
+const api = axios.create({ baseURL });
 
 export const getPosts = async (search = '') => {
   const response = await api.get(`blog/posts/?search=${search}`);
