@@ -36,6 +36,8 @@ ALLOWED_HOSTS = [
     "tenantguard.net",
     "www.tenantguard.net",
     "dev.tenantguard.net",
+    "backend",
+    "frontend",
 ]
 
 
@@ -163,6 +165,8 @@ else:
         "https://dev.tenantguard.net",
         "https://tenantguard.net",
         "https://www.tenantguard.net",
+        "http://backend",
+        "http://frontend",
     ]
 
 
