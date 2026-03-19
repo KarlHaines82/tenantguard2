@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/4.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
+
 import os
 from datetime import timedelta
 from pathlib import Path
@@ -29,7 +30,13 @@ SECRET_KEY = "django-insecure-z6dh*i8cjajq$o6lg-@$%3v06vpl!irr9+v0=+d&5d$f#-(&#t
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    "localhost",
+    "127.0.0.1",
+    "tenantguard.net",
+    "www.tenantguard.net",
+    "dev.tenantguard.net",
+]
 
 
 # Application definition
@@ -153,6 +160,9 @@ else:
     CORS_ALLOWED_ORIGINS = [
         "http://localhost:3000/",
         "http://127.0.0.1:3000/",
+        "https://dev.tenantguard.net",
+        "https://tenantguard.net",
+        "https://www.tenantguard.net",
     ]
 
 
@@ -164,7 +174,6 @@ REST_FRAMEWORK = {
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ]
 }
-
 
 # django-all-auth
 # https://django-allauth.readthedocs.io/en/latest/index.html
@@ -213,7 +222,11 @@ JAZZMIN_SETTINGS = {
     "topmenu_links": [
         {"name": "Home", "url": "admin:index", "permissions": ["auth.view_user"]},
         {"model": "auth.User"},
-        {"name": "AI Blog Writer", "url": "ai-generator", "permissions": ["auth.view_user"]},
+        {
+            "name": "AI Blog Writer",
+            "url": "ai-generator",
+            "permissions": ["auth.view_user"],
+        },
         {"app": "blog"},
     ],
     "show_sidebar": True,
@@ -236,9 +249,11 @@ JAZZMIN_SETTINGS = {
     "custom_js": None,
     "show_ui_builder": False,
     "changeform_format": "horizontal_tabs",
-    "changeform_format_overrides": {"auth.user": "collapsible", "auth.group": "vertical_tabs"},
+    "changeform_format_overrides": {
+        "auth.user": "collapsible",
+        "auth.group": "vertical_tabs",
+    },
 }
-
 
 # dj-rest-auth & djangorestframework-simplejwt
 # https://dj-rest-auth.readthedocs.io/en/latest/index.html
@@ -259,7 +274,6 @@ SIMPLE_JWT = {
     "ALGORITHM": "HS512",
 }
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
@@ -270,7 +284,6 @@ TIME_ZONE = "UTC"
 USE_I18N = True
 
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
