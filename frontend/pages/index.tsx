@@ -121,74 +121,6 @@ export default function Home({ recentPosts }: { recentPosts: any[] }) {
           </motion.div>
         </section>
 
-        {/* ── Recent Blog Posts Strip ───────────────────────────────────────── */}
-        {recentPosts.length > 0 && (
-          <section className="py-10 bg-white border-y border-gray-100">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <motion.div
-                className="flex items-center justify-between mb-6"
-                initial={{ opacity: 0, y: 12 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4 }}
-              >
-                <h2 className="text-lg font-bold text-gray-900 tracking-tight">Latest from the Blog</h2>
-                <Link href="/blog" className="text-sm text-primary hover:underline flex items-center gap-1 group">
-                  View all
-                  <ArrowRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
-                </Link>
-              </motion.div>
-              <motion.div
-                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4"
-                variants={stagger}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true, margin: '-40px' }}
-              >
-                {recentPosts.slice(0, 5).map((post, i) => (
-                  <motion.div key={post.id} variants={fadeUp} custom={i}>
-                    <Link href={`/blog/${post.slug}`} className="group block h-full">
-                      <motion.div
-                        className="bg-white rounded-xl overflow-hidden border border-gray-100 h-full"
-                        variants={cardHover}
-                        initial="rest"
-                        whileHover="hover"
-                        animate="rest"
-                      >
-                        <div className="aspect-video overflow-hidden bg-gray-50">
-                          {post.featured_image ? (
-                            <motion.img
-                              src={fixMediaUrl(post.featured_image) ?? undefined}
-                              alt={post.title}
-                              className="w-full h-full object-cover"
-                              whileHover={{ scale: 1.07 }}
-                              transition={{ duration: 0.5 }}
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <FileText className="h-8 w-8 text-gray-200" />
-                            </div>
-                          )}
-                        </div>
-                        <div className="p-3">
-                          <h3 className="text-sm font-semibold text-gray-900 line-clamp-2 group-hover:text-primary transition-colors duration-200 leading-snug mb-1.5">
-                            {post.title}
-                          </h3>
-                          {post.excerpt && (
-                            <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">
-                              {post.excerpt.slice(0, 120)}
-                            </p>
-                          )}
-                        </div>
-                      </motion.div>
-                    </Link>
-                  </motion.div>
-                ))}
-              </motion.div>
-            </div>
-          </section>
-        )}
-
         {/* ── The Challenge ─────────────────────────────────────────────────── */}
         <section className="py-16 bg-gray-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -347,6 +279,42 @@ export default function Home({ recentPosts }: { recentPosts: any[] }) {
             </motion.div>
           </div>
         </section>
+
+        {/* ── Recent Blog Posts Strip ───────────────────────────────────────── */}
+        {recentPosts.length > 0 && (
+          <section className="py-10 bg-white border-y border-gray-100">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <motion.div className="flex items-center justify-between mb-6" initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4 }}>
+                <h2 className="text-lg font-bold text-gray-900 tracking-tight">Latest from the Blog</h2>
+                <Link href="/blog" className="text-sm text-primary hover:underline flex items-center gap-1 group">
+                  View all
+                  <ArrowRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
+                </Link>
+              </motion.div>
+              <motion.div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4" variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-40px' }}>
+                {recentPosts.slice(0, 5).map((post, i) => (
+                  <motion.div key={post.id} variants={fadeUp} custom={i}>
+                    <Link href={`/blog/${post.slug}`} className="group block h-full">
+                      <motion.div className="bg-white rounded-xl overflow-hidden border border-gray-100 h-full" variants={cardHover} initial="rest" whileHover="hover" animate="rest">
+                        <div className="aspect-video overflow-hidden bg-gray-50">
+                          {post.featured_image ? (
+                            <motion.img src={fixMediaUrl(post.featured_image) ?? undefined} alt={post.title} className="w-full h-full object-cover" whileHover={{ scale: 1.07 }} transition={{ duration: 0.5 }} />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center"><FileText className="h-8 w-8 text-gray-200" /></div>
+                          )}
+                        </div>
+                        <div className="p-3">
+                          <h3 className="text-sm font-semibold text-gray-900 line-clamp-2 group-hover:text-primary transition-colors duration-200 leading-snug mb-1.5">{post.title}</h3>
+                          {post.excerpt && <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">{post.excerpt.slice(0, 120)}</p>}
+                        </div>
+                      </motion.div>
+                    </Link>
+                  </motion.div>
+                ))}
+              </motion.div>
+            </div>
+          </section>
+        )}
 
         {/* ── Modern Technology Stack ───────────────────────────────────────── */}
         <section className="py-16 bg-gray-50">
