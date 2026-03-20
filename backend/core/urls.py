@@ -26,6 +26,7 @@ urlpatterns = [
     path("api/blog/", include("blog.urls")),
     path("api/chat/", include("chat.urls")),
     path("api/intake/", include("intake.urls")),
+    path("staff/todos/", include("stafftodo.urls", namespace="stafftodo")),
     path("admin/ai-generator/", ai_generator_view, name='ai-generator'),
     path("admin/blog/ai-generate-api/", ai_generate_api, name='ai-generate-api'),
     path("admin/", admin.site.urls),

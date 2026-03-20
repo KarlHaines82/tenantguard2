@@ -44,11 +44,26 @@ export default function BlogIndex({ posts: initialPosts, categories }: BlogIndex
     })
   }
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://tenantguard.net'
+  const pageUrl = `${siteUrl}/blog`
+  const ogImage = `${siteUrl}/assets/logo.png`
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Head>
-        <title>TenantGuard Blog - Latest Updates & Research</title>
-        <meta name="description" content="Stay updated with our latest technical updates and market research on tenant legal representation." />
+        <title>TenantGuard Blog - Tenant Rights & Eviction Defense</title>
+        <meta name="description" content="Expert articles on Tennessee tenant rights, eviction defense, and landlord-tenant law. Stay informed with TenantGuard's legal research and updates." />
+        <link rel="canonical" href={pageUrl} />
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="TenantGuard" />
+        <meta property="og:url" content={pageUrl} />
+        <meta property="og:title" content="TenantGuard Blog - Tenant Rights & Eviction Defense" />
+        <meta property="og:description" content="Expert articles on Tennessee tenant rights, eviction defense, and landlord-tenant law." />
+        <meta property="og:image" content={ogImage} />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="TenantGuard Blog - Tenant Rights & Eviction Defense" />
+        <meta name="twitter:description" content="Expert articles on Tennessee tenant rights, eviction defense, and landlord-tenant law." />
+        <meta name="twitter:image" content={ogImage} />
       </Head>
 
       <Navbar />

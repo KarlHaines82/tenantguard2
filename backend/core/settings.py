@@ -81,6 +81,7 @@ INSTALLED_APPS = [
     "blog.apps.BlogConfig",
     "chat.apps.ChatConfig",
     "intake.apps.IntakeConfig",
+    "stafftodo.apps.StafftodoConfig",
 ]
 
 SITE_ID = 1

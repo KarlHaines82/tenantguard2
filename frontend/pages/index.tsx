@@ -27,11 +27,36 @@ export default function Home() {
     window.location.href = role === 'attorney' ? '/attorney-intake' : '/tenant-intake'
   }
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://tenantguard.net'
+  const ogImage = `${siteUrl}/assets/logo.png`
+
+  const orgJsonLd = JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "TenantGuard",
+    "url": siteUrl,
+    "logo": ogImage,
+    "description": "Technology-enabled self-service platform connecting tenants with qualified attorneys for streamlined landlord-tenant dispute resolution.",
+    "areaServed": { "@type": "State", "name": "Tennessee" }
+  })
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
       <Head>
         <title>TenantGuard - Transforming Tenant Legal Representation</title>
         <meta name="description" content="Technology-enabled self-service platform connecting tenants with qualified attorneys for streamlined landlord-tenant dispute resolution." />
+        <link rel="canonical" href={siteUrl} />
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="TenantGuard" />
+        <meta property="og:url" content={siteUrl} />
+        <meta property="og:title" content="TenantGuard - Transforming Tenant Legal Representation" />
+        <meta property="og:description" content="Technology-enabled self-service platform connecting tenants with qualified attorneys for streamlined landlord-tenant dispute resolution." />
+        <meta property="og:image" content={ogImage} />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="TenantGuard - Transforming Tenant Legal Representation" />
+        <meta name="twitter:description" content="Technology-enabled self-service platform connecting tenants with qualified attorneys for streamlined landlord-tenant dispute resolution." />
+        <meta name="twitter:image" content={ogImage} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: orgJsonLd }} />
       </Head>
 
       <Navbar 

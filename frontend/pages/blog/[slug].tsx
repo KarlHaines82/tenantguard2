@@ -68,37 +68,55 @@ export default function BlogPost({ post: initialPost }: { post: PostDetail }) {
     })
   }
 
-  // Schema.org data
-  const jsonLd = {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://tenantguard.net'
+  const pageUrl = `${siteUrl}/blog/${post.slug}`
+  const ogImage = post.featured_image
+    ? fixMediaUrl(post.featured_image) || `${siteUrl}/assets/logo.png`
+    : `${siteUrl}/assets/logo.png`
+  const pageTitle = post.meta_title || post.title
+  const pageDescription = post.meta_description || post.excerpt
+
+  // Schema.org structured data — static developer-controlled object, safe for JSON.stringify
+  const jsonLd = JSON.stringify({
     "@context": "https://schema.org",
     "@type": "BlogPosting",
     "headline": post.title,
-    "image": post.featured_image,
-    "author": {
-      "@type": "Person",
-      "name": post.author
-    },
+    "image": ogImage,
+    "url": pageUrl,
+    "author": { "@type": "Person", "name": post.author },
     "publisher": {
       "@type": "Organization",
       "name": "TenantGuard",
-      "logo": {
-        "@type": "ImageObject",
-        "url": "https://tenantguard.net/assets/logo.png"
-      }
+      "logo": { "@type": "ImageObject", "url": `${siteUrl}/assets/logo.png` }
     },
     "datePublished": post.created_at,
-    "description": post.excerpt
-  }
+    "description": post.excerpt,
+    ...(post.category && { "articleSection": post.category.name }),
+    ...(post.tags.length > 0 && { "keywords": post.tags.join(', ') })
+  })
 
   return (
     <div className="min-h-screen bg-white">
       <Head>
-        <title>{post.meta_title || post.title}</title>
-        <meta name="description" content={post.meta_description || post.excerpt} />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        />
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        <link rel="canonical" href={pageUrl} />
+        <meta property="og:type" content="article" />
+        <meta property="og:site_name" content="TenantGuard" />
+        <meta property="og:url" content={pageUrl} />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        <meta property="og:image" content={ogImage} />
+        <meta property="article:published_time" content={post.created_at} />
+        {post.category && <meta property="article:section" content={post.category.name} />}
+        {post.tags.map((tag) => (
+          <meta key={tag} property="article:tag" content={tag} />
+        ))}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={pageDescription} />
+        <meta name="twitter:image" content={ogImage} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd }} />
       </Head>
 
       <Navbar />
