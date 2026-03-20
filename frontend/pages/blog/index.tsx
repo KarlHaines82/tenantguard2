@@ -8,7 +8,6 @@ import { Calendar, User, ArrowRight, Tag, Search, FileText } from 'lucide-react'
 import Navbar from '@/components/Navbar'
 import Link from 'next/link'
 import { getPosts, getCategories, fixMediaUrl } from '@/lib/api'
-import RecentPostsSidebar from '@/components/RecentPostsSidebar'
 
 interface Post {
   id: number
@@ -107,11 +106,8 @@ export default function BlogIndex({ posts: initialPosts, categories }: BlogIndex
           </div>
         </div>
 
-        {/* Main content + Sidebar */}
-        <div className="flex flex-col lg:flex-row gap-8 items-start">
-          {/* Blog Grid */}
-          <div className="flex-1 min-w-0">
-            <div className="grid gap-8 sm:grid-cols-2">
+        {/* Blog Grid */}
+        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
               {posts.map((post) => (
                 <Link key={post.id} href={`/blog/${post.slug}`} className="group">
                   <Card className="h-full hover:shadow-xl transition-all duration-300 border-none shadow-soft overflow-hidden group-hover:-translate-y-1">
@@ -163,16 +159,11 @@ export default function BlogIndex({ posts: initialPosts, categories }: BlogIndex
               ))}
             </div>
 
-            {posts.length === 0 && (
-              <div className="text-center py-20">
-                <p className="text-xl text-gray-500">No posts found matching your search.</p>
-              </div>
-            )}
+        {posts.length === 0 && (
+          <div className="text-center py-20">
+            <p className="text-xl text-gray-500">No posts found matching your search.</p>
           </div>
-
-          {/* Sidebar */}
-          <RecentPostsSidebar posts={initialPosts} />
-        </div>
+        )}
       </main>
 
       <footer className="bg-gray-900 text-white py-12 mt-20">

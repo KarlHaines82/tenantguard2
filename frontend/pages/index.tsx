@@ -1,13 +1,17 @@
 import React, { useState } from 'react'
 import Head from 'next/head'
+import { GetServerSideProps } from 'next'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { ArrowRight, FileText, Gavel, Shield, CheckCircle, Clock, TrendingUp } from 'lucide-react'
 import Navbar from '@/components/Navbar'
 import { useSession, signIn } from 'next-auth/react'
+import { getPosts } from '@/lib/api'
+import RecentPostsSidebar from '@/components/RecentPostsSidebar'
 
-export default function Home() {
+export default function Home({ recentPosts }: { recentPosts: any[] }) {
   const { data: session } = useSession()
   const [activeTab, setActiveTab] = useState<'tenant' | 'attorney'>('tenant')
 
@@ -395,6 +399,29 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Latest from the Blog */}
+        <section className="py-20 bg-gray-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col lg:flex-row gap-12 items-start">
+              <div className="flex-1">
+                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                  Latest from the Blog
+                </h2>
+                <p className="text-lg text-gray-600 mb-6">
+                  Stay informed with our latest articles on Tennessee tenant rights, eviction defense strategies, landlord-tenant law, and related technologies.
+                </p>
+                <Link href="/blog">
+                  <Button variant="outline" className="group">
+                    View all posts
+                    <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  </Button>
+                </Link>
+              </div>
+              <RecentPostsSidebar posts={recentPosts} />
+            </div>
+          </div>
+        </section>
+
         {/* CTA Section */}
         <section className="py-20 bg-red-800 text-white">
           <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
@@ -465,4 +492,13 @@ export default function Home() {
       </footer>
     </div>
   )
+}
+
+export const getServerSideProps: GetServerSideProps = async () => {
+  try {
+    const recentPosts = await getPosts()
+    return { props: { recentPosts } }
+  } catch {
+    return { props: { recentPosts: [] } }
+  }
 }
