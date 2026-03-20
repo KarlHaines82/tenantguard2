@@ -6,8 +6,9 @@ import { Button } from '@/components/ui/button'
 import { Calendar, User, ArrowLeft, Send } from 'lucide-react'
 import Navbar from '@/components/Navbar'
 import Link from 'next/link'
-import { getPost, createComment, fixMediaUrl } from '@/lib/api'
+import { getPost, getPosts, createComment, fixMediaUrl } from '@/lib/api'
 import { useSession, signIn } from 'next-auth/react'
+import RecentPostsSidebar from '@/components/RecentPostsSidebar'
 
 interface Comment {
   id: number
@@ -32,7 +33,7 @@ interface PostDetail {
   meta_description?: string
 }
 
-export default function BlogPost({ post: initialPost }: { post: PostDetail }) {
+export default function BlogPost({ post: initialPost, recentPosts }: { post: PostDetail; recentPosts: any[] }) {
   const { data: session } = useSession()
   const [post, setPost] = useState(initialPost)
   const [comment, setComment] = useState('')
@@ -121,12 +122,14 @@ export default function BlogPost({ post: initialPost }: { post: PostDetail }) {
 
       <Navbar />
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <Link href="/blog" className="inline-flex items-center text-primary hover:underline mb-8">
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to all posts
         </Link>
 
+        <div className="flex flex-col lg:flex-row gap-10 items-start">
+        <div className="flex-1 min-w-0">
         <article>
           <header className="mb-12">
             <div className="flex items-center gap-2 mb-4">
@@ -233,11 +236,19 @@ export default function BlogPost({ post: initialPost }: { post: PostDetail }) {
             )}
           </div>
         </section>
+        </div>{/* end article column */}
+
+        <RecentPostsSidebar posts={recentPosts} currentSlug={post.slug} />
+        </div>{/* end flex row */}
       </main>
 
       <footer className="bg-gray-900 text-white py-12 mt-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p>© 2026 TenantGuard. All rights reserved.</p>
+          <p className="mb-3">© 2026 TenantGuard. All rights reserved.</p>
+          <div className="flex justify-center gap-6 text-sm text-gray-400">
+            <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
+            <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
+          </div>
         </div>
       </footer>
     </div>
@@ -247,11 +258,12 @@ export default function BlogPost({ post: initialPost }: { post: PostDetail }) {
 export const getServerSideProps: GetServerSideProps = async ({ params }) => {
   try {
     const slug = params?.slug as string
-    const post = await getPost(slug)
+    const [post, recentPosts] = await Promise.all([
+      getPost(slug),
+      getPosts(),
+    ])
     return {
-      props: {
-        post
-      }
+      props: { post, recentPosts }
     }
   } catch (error) {
     console.error('Error fetching post:', error)

@@ -8,6 +8,7 @@ import { Calendar, User, ArrowRight, Tag, Search, FileText } from 'lucide-react'
 import Navbar from '@/components/Navbar'
 import Link from 'next/link'
 import { getPosts, getCategories, fixMediaUrl } from '@/lib/api'
+import RecentPostsSidebar from '@/components/RecentPostsSidebar'
 
 interface Post {
   id: number
@@ -37,10 +38,10 @@ export default function BlogIndex({ posts: initialPosts, categories }: BlogIndex
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
     })
   }
 
@@ -79,7 +80,7 @@ export default function BlogIndex({ posts: initialPosts, categories }: BlogIndex
         </div>
 
         {/* Search & Categories */}
-        <div className="mb-12 flex flex-col md:flex-row gap-4 items-center justify-between">
+        <div className="mb-10 flex flex-col md:flex-row gap-4 items-center justify-between">
           <form onSubmit={handleSearch} className="relative w-full md:w-96">
             <input
               type="text"
@@ -106,69 +107,81 @@ export default function BlogIndex({ posts: initialPosts, categories }: BlogIndex
           </div>
         </div>
 
-        {/* Blog Grid */}
-        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-          {posts.map((post) => (
-            <Link key={post.id} href={`/blog/${post.slug}`} className="group">
-              <Card className="h-full hover:shadow-xl transition-all duration-300 border-none shadow-soft overflow-hidden group-hover:-translate-y-1">
-                <div className="aspect-video relative overflow-hidden bg-gray-100">
-                  {post.featured_image ? (
-                    <img 
-                      src={fixMediaUrl(post.featured_image)!}
-                      alt={post.title}
-                      className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-primary/5">
-                      <FileText className="h-12 w-12 text-primary/20" />
+        {/* Main content + Sidebar */}
+        <div className="flex flex-col lg:flex-row gap-8 items-start">
+          {/* Blog Grid */}
+          <div className="flex-1 min-w-0">
+            <div className="grid gap-8 sm:grid-cols-2">
+              {posts.map((post) => (
+                <Link key={post.id} href={`/blog/${post.slug}`} className="group">
+                  <Card className="h-full hover:shadow-xl transition-all duration-300 border-none shadow-soft overflow-hidden group-hover:-translate-y-1">
+                    <div className="aspect-video relative overflow-hidden bg-gray-100">
+                      {post.featured_image ? (
+                        <img
+                          src={fixMediaUrl(post.featured_image)!}
+                          alt={post.title}
+                          className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-primary/5">
+                          <FileText className="h-12 w-12 text-primary/20" />
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-                <CardHeader>
-                  <div className="flex items-center gap-2 mb-3">
-                    {post.category && (
-                      <Badge variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20 border-none">
-                        {post.category.name}
-                      </Badge>
-                    )}
-                  </div>
-                  <CardTitle className="text-xl font-bold group-hover:text-primary transition-colors line-clamp-2">
-                    {post.title}
-                  </CardTitle>
-                  <CardDescription className="line-clamp-3 mt-2">
-                    {post.excerpt}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between mt-4">
-                    <div className="flex items-center gap-4 text-xs text-gray-500">
-                      <div className="flex items-center gap-1">
-                        <Calendar className="h-3.5 w-3.5" />
-                        <span>{formatDate(post.created_at)}</span>
+                    <CardHeader>
+                      <div className="flex items-center gap-2 mb-3">
+                        {post.category && (
+                          <Badge variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20 border-none">
+                            {post.category.name}
+                          </Badge>
+                        )}
                       </div>
-                      <div className="flex items-center gap-1">
-                        <User className="h-3.5 w-3.5" />
-                        <span>{post.author}</span>
+                      <CardTitle className="text-xl font-bold group-hover:text-primary transition-colors line-clamp-2">
+                        {post.title}
+                      </CardTitle>
+                      <CardDescription className="line-clamp-3 mt-2">
+                        {post.excerpt}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center justify-between mt-4">
+                        <div className="flex items-center gap-4 text-xs text-gray-500">
+                          <div className="flex items-center gap-1">
+                            <Calendar className="h-3.5 w-3.5" />
+                            <span>{formatDate(post.created_at)}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <User className="h-3.5 w-3.5" />
+                            <span>{post.author}</span>
+                          </div>
+                        </div>
+                        <ArrowRight className="h-4 w-4 text-primary opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0" />
                       </div>
-                    </div>
-                    <ArrowRight className="h-4 w-4 text-primary opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0" />
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
-        </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
 
-        {posts.length === 0 && (
-          <div className="text-center py-20">
-            <p className="text-xl text-gray-500">No posts found matching your search.</p>
+            {posts.length === 0 && (
+              <div className="text-center py-20">
+                <p className="text-xl text-gray-500">No posts found matching your search.</p>
+              </div>
+            )}
           </div>
-        )}
+
+          {/* Sidebar */}
+          <RecentPostsSidebar posts={initialPosts} />
+        </div>
       </main>
 
       <footer className="bg-gray-900 text-white py-12 mt-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p>© 2026 TenantGuard. All rights reserved.</p>
+          <p className="mb-3">© 2026 TenantGuard. All rights reserved.</p>
+          <div className="flex justify-center gap-6 text-sm text-gray-400">
+            <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
+            <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
+          </div>
         </div>
       </footer>
     </div>

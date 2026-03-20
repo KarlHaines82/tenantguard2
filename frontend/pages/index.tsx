@@ -455,7 +455,11 @@ export default function Home() {
             </div>
           </div>
           <div className="border-t border-gray-800 pt-8 text-center text-gray-400 text-sm">
-            <p>© 2026 TenantGuard. All rights reserved.</p>
+            <p className="mb-3">© 2026 TenantGuard. All rights reserved.</p>
+            <div className="flex justify-center gap-6">
+              <a href="/privacy" className="hover:text-white transition-colors">Privacy Policy</a>
+              <a href="/terms" className="hover:text-white transition-colors">Terms of Service</a>
+            </div>
           </div>
         </div>
       </footer>
