@@ -1,4 +1,5 @@
 import React from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -96,15 +97,17 @@ const Navbar = ({
 
           <nav className="hidden md:flex space-x-8">
             {navItems.map((item) => (
-              <Button
-                key={item.id}
-                variant="ghost"
-                style={{ color: 'var(--color-textSecondary)' }}
-                className=""
-                onClick={() => handleNavClick(item.id)}
-              >
-                {item.label}
-              </Button>
+              <motion.div key={item.id} whileHover={{ y: -1 }} transition={{ type: 'spring', stiffness: 400, damping: 20 }}>
+                <Button
+                  variant="ghost"
+                  style={{ color: 'var(--color-textSecondary)' }}
+                  className="relative group transition-colors duration-200"
+                  onClick={() => handleNavClick(item.id)}
+                >
+                  {item.label}
+                  <span className="absolute bottom-0 left-1/2 -translate-x-1/2 h-0.5 w-0 bg-primary rounded-full transition-all duration-300 group-hover:w-4/5" />
+                </Button>
+              </motion.div>
             ))}
           </nav>
 
@@ -194,94 +197,129 @@ const Navbar = ({
               className="md:hidden"
               onClick={() => setIsMobileMenuOpen((open) => !open)}
             >
-              <svg
+              <motion.svg
                 xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+                width="24" height="24" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" strokeWidth="2"
+                strokeLinecap="round" strokeLinejoin="round"
+                animate={isMobileMenuOpen ? 'open' : 'closed'}
               >
-                <line x1="3" y1="12" x2="21" y2="12"></line>
-                <line x1="3" y1="6" x2="21" y2="6"></line>
-                <line x1="3" y1="18" x2="21" y2="18"></line>
-              </svg>
+                <motion.line
+                  x1="3" y1="6" x2="21" y2="6"
+                  variants={{ closed: { rotate: 0, y: 0, opacity: 1 }, open: { rotate: 45, y: 6, opacity: 1 } }}
+                  transition={{ duration: 0.25 }}
+                />
+                <motion.line
+                  x1="3" y1="12" x2="21" y2="12"
+                  variants={{ closed: { opacity: 1 }, open: { opacity: 0 } }}
+                  transition={{ duration: 0.2 }}
+                />
+                <motion.line
+                  x1="3" y1="18" x2="21" y2="18"
+                  variants={{ closed: { rotate: 0, y: 0, opacity: 1 }, open: { rotate: -45, y: -6, opacity: 1 } }}
+                  transition={{ duration: 0.25 }}
+                />
+              </motion.svg>
             </Button>
           </div>
 
         </div>
 
-        {isMobileMenuOpen && (
-          <div id="mobile-nav" className="md:hidden border-t" style={{ borderColor: 'var(--color-navBorder)' }}>
-            <nav className="flex flex-col items-end py-2 pr-[10px]">
-              {navItems.map((item) => (
-                <Button
-                  key={item.id}
-                  variant="ghost"
-                  style={{ color: 'var(--color-textSecondary)' }}
-                  className="w-full justify-end text-right hover:opacity-80"
-                  onClick={() => handleNavClick(item.id)}
-                >
-                  {item.label}
-                </Button>
-              ))}
-            </nav>
-            <div className="flex flex-col items-end gap-2 pb-4 pl-4 pr-[10px]">
-              {session ? (
-                <div className="flex flex-col gap-2">
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <motion.div
+              id="mobile-nav"
+              className="md:hidden border-t overflow-hidden"
+              style={{ borderColor: 'var(--color-navBorder)' }}
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <nav className="flex flex-col items-end py-2 pr-[10px]">
+                {navItems.map((item, i) => (
+                  <motion.div
+                    key={item.id}
+                    initial={{ opacity: 0, x: 16 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.05, duration: 0.2 }}
+                    className="w-full"
+                  >
+                    <Button
+                      variant="ghost"
+                      style={{ color: 'var(--color-textSecondary)' }}
+                      className="w-full justify-end text-right hover:opacity-80"
+                      onClick={() => handleNavClick(item.id)}
+                    >
+                      {item.label}
+                    </Button>
+                  </motion.div>
+                ))}
+              </nav>
+              <div className="flex flex-col items-end gap-2 pb-4 pl-4 pr-[10px]">
+                {session ? (
+                  <div className="flex flex-col gap-2 w-full">
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-end gap-2"
+                      onClick={() => setIsMobileUserOpen((open) => !open)}
+                    >
+                      <span className="flex items-center gap-2">
+                        <User className="h-4 w-4" />
+                        {getUserDisplayText()}
+                      </span>
+                      <motion.div animate={{ rotate: isMobileUserOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                        <ChevronDown className="h-4 w-4" />
+                      </motion.div>
+                    </Button>
+                    <AnimatePresence>
+                      {isMobileUserOpen && (
+                        <motion.div
+                          className="flex flex-col gap-1 pr-6"
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          {(session as any).user?.role === 'admin' && (
+                            <Button
+                              variant="ghost"
+                              className="w-full justify-end text-right"
+                              onClick={() => {
+                                setIsMobileMenuOpen(false)
+                                setIsMobileUserOpen(false)
+                                if (onDashboard) onDashboard()
+                              }}
+                            >
+                              <Settings className="mr-2 h-4 w-4" />
+                              Dashboard
+                            </Button>
+                          )}
+                          <Button
+                            variant="ghost"
+                            className="w-full justify-end text-right text-red-600 hover:text-red-600"
+                            onClick={() => signOut()}
+                          >
+                            <LogOut className="mr-2 h-4 w-4" />
+                            Log out
+                          </Button>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                ) : (
                   <Button
                     variant="ghost"
-                    className="w-full justify-end gap-2"
-                    onClick={() => setIsMobileUserOpen((open) => !open)}
+                    className="w-full justify-end text-right"
+                    onClick={() => signIn()}
                   >
-                    <span className="flex items-center gap-2">
-                      <User className="h-4 w-4" />
-                      {getUserDisplayText()}
-                    </span>
-                    <ChevronDown className={`h-4 w-4 transition-transform ${isMobileUserOpen ? 'rotate-180' : ''}`} />
+                    Login
                   </Button>
-                  {isMobileUserOpen && (
-                    <div className="flex flex-col gap-1 pr-6">
-                      {(session as any).user?.role === 'admin' && (
-                        <Button
-                          variant="ghost"
-                          className="w-full justify-end text-right"
-                          onClick={() => {
-                            setIsMobileMenuOpen(false)
-                            setIsMobileUserOpen(false)
-                            if (onDashboard) onDashboard()
-                          }}
-                        >
-                          <Settings className="mr-2 h-4 w-4" />
-                          Dashboard
-                        </Button>
-                      )}
-                      <Button
-                        variant="ghost"
-                        className="w-full justify-end text-right text-red-600 hover:text-red-600"
-                        onClick={() => signOut()}
-                      >
-                        <LogOut className="mr-2 h-4 w-4" />
-                        Log out
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <Button
-                  variant="ghost"
-                  className="w-full justify-end text-right"
-                  onClick={() => signIn()}
-                >
-                  Login
-                </Button>
-              )}
-            </div>
-          </div>
-        )}
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </header>
   )
