@@ -143,26 +143,107 @@ class IntakeAnalysisWorkflow:
             f"Name: {submission.full_name}",
             f"Email: {submission.email}",
         ]
+        if submission.phone:
+            lines.append(f"Phone: {submission.phone}")
+
         if submission.role == "tenant":
+            # Contact / location
+            if submission.city:
+                lines.append(f"City: {submission.city}, {submission.state} {submission.zip_code}".strip())
+
+            # Demographics
+            if submission.age:
+                lines.append(f"Age: {submission.age}" + (" (Senior 60+)" if submission.age >= 60 else ""))
+            if submission.has_disability:
+                lines.append("Has disability: Yes")
+            if submission.has_children_under_18:
+                lines.append("Has children under 18 in household: Yes")
+            if submission.household_income_range:
+                lines.append(f"Household income: {submission.get_household_income_range_display()}")
+            if submission.primary_language and submission.primary_language != "English":
+                lines.append(f"Primary language: {submission.primary_language}")
+            if submission.needs_interpreter:
+                lines.append("Needs interpreter: Yes")
+
+            # Property
             if submission.property_address:
                 lines.append(f"Property Address: {submission.property_address}")
             if submission.county:
                 lines.append(f"County: {submission.get_county_display()}")
+            if submission.property_type:
+                lines.append(f"Property Type: {submission.get_property_type_display()}")
+            if submission.bedrooms is not None:
+                lines.append(f"Bedrooms: {submission.bedrooms}")
+            if submission.monthly_rent is not None:
+                lines.append(f"Monthly Rent: ${submission.monthly_rent}")
+            if submission.move_in_date:
+                lines.append(f"Move-in Date: {submission.move_in_date}")
+            if submission.lease_type:
+                lines.append(f"Lease Type: {submission.get_lease_type_display()}")
+            if submission.security_deposit_amount is not None:
+                lines.append(f"Security Deposit Paid: ${submission.security_deposit_amount}")
+            if submission.government_assistance:
+                lines.append(f"Government Assistance: {submission.get_government_assistance_display()}")
+
+            # Landlord
             if submission.landlord_name:
                 lines.append(f"Landlord: {submission.landlord_name}")
+            if submission.landlord_contact:
+                lines.append(f"Landlord Contact: {submission.landlord_contact}")
+            if submission.property_management_company:
+                lines.append(f"Property Management Company: {submission.property_management_company}")
+            if submission.landlord_address:
+                lines.append(f"Landlord Address: {submission.landlord_address}")
+
+            # Dispute
             if submission.issue_type:
                 lines.append(f"Issue Type: {submission.get_issue_type_display()}")
-            if submission.notice_date:
-                lines.append(f"Notice Date: {submission.notice_date}")
+            if submission.eviction_notice_type:
+                lines.append(f"Eviction Notice Type: {submission.get_eviction_notice_type_display()}")
+            if submission.eviction_reason:
+                lines.append(f"Eviction Reason: {submission.eviction_reason}")
+            if submission.amount_owed is not None:
+                lines.append(f"Amount Owed: ${submission.amount_owed}")
             if submission.issue_description:
                 lines.append(f"Description: {submission.issue_description}")
+
+            # Timeline
+            if submission.problem_start_date:
+                lines.append(f"Problem Start Date: {submission.problem_start_date}")
+            if submission.notice_date:
+                lines.append(f"Notice Date: {submission.notice_date}")
+            if submission.court_date:
+                lines.append(f"Court Date: {submission.court_date}")
+            if submission.response_deadline:
+                lines.append(f"Response Deadline: {submission.response_deadline}")
+            if submission.urgency_level:
+                lines.append(f"Urgency: {submission.get_urgency_level_display()}")
+
+            # Goals
+            if submission.desired_outcome:
+                lines.append(f"Desired Outcome: {submission.desired_outcome}")
+            if submission.previous_resolution_attempts:
+                lines.append(f"Previous Resolution Attempts: {submission.previous_resolution_attempts}")
+            if submission.other_parties_involved:
+                lines.append(f"Other Parties: {submission.other_parties_involved}")
+
+            # Legal rep
+            if submission.interested_in_attorney:
+                lines.append("Interested in attorney representation: Yes")
+            if submission.legal_budget:
+                lines.append(f"Legal budget: {submission.get_legal_budget_display()}")
+            if submission.previous_legal_assistance:
+                lines.append(f"Previous legal assistance: {submission.previous_legal_assistance}")
+
         else:
+            # Attorney
             if submission.bar_number:
                 lines.append(f"Bar Number: {submission.bar_number}")
             if submission.firm_name:
                 lines.append(f"Firm: {submission.firm_name}")
             if submission.case_description:
                 lines.append(f"Case Description: {submission.case_description}")
+
         return "\n".join(lines)
 
     def _safe_parse_json(self, text: str, fallback):
