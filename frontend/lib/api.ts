@@ -85,4 +85,89 @@ export const getIntakeSubmission = async (submissionId: number, token: string) =
   return response.data;
 };
 
+export const listIntakeSubmissions = async (token: string) => {
+  const response = await api.get('intake/', {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
+export const createCheckoutSession = async (submissionId: number, token: string) => {
+  const response = await api.post(`intake/${submissionId}/checkout/`, {}, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data as { checkout_url: string; price_display: string };
+};
+
+export const getIntakePrice = async (token: string) => {
+  const response = await api.get('intake/price/', {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data as { price_cents: number; price_display: string };
+};
+
+export interface ChatMessage {
+  role: 'user' | 'assistant'
+  content: string
+}
+
+export interface ChatSSEEvent {
+  type: 'submission_id' | 'text' | 'intake_saved' | 'intake_complete' | 'done' | 'error'
+  id?: number
+  content?: string
+  fields?: string[]
+  submission_id?: number
+  urgency?: string
+  message?: string
+}
+
+/**
+ * Streams an intake chat turn from the Django backend.
+ * Calls onEvent for each SSE event received.
+ */
+export async function streamIntakeChat(
+  messages: ChatMessage[],
+  token: string,
+  onEvent: (event: ChatSSEEvent) => void,
+  submissionId?: number
+): Promise<void> {
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') ?? ''
+  const response = await fetch(`${baseUrl}/intake/chat/`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ messages, submission_id: submissionId ?? null }),
+  })
+
+  if (!response.ok || !response.body) {
+    onEvent({ type: 'error', message: `Request failed: ${response.status}` })
+    return
+  }
+
+  const reader = response.body.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+
+    buffer += decoder.decode(value, { stream: true })
+    const lines = buffer.split('\n')
+    buffer = lines.pop() ?? ''
+
+    for (const line of lines) {
+      if (!line.startsWith('data: ')) continue
+      try {
+        const event: ChatSSEEvent = JSON.parse(line.slice(6))
+        onEvent(event)
+      } catch {
+        // skip malformed events
+      }
+    }
+  }
+}
+
 export default api;

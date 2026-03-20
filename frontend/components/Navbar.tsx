@@ -112,6 +112,13 @@ const Navbar = ({
           </nav>
 
           <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              className="hidden md:inline-flex bg-primary hover:opacity-90 text-white"
+              onClick={() => router.push('/intake')}
+            >
+              Get Help Now
+            </Button>
             {session ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

@@ -43,8 +43,7 @@ export default function Home({ recentPosts }: { recentPosts: any[] }) {
       signIn()
       return
     }
-    // Redirect to intake (to be implemented)
-    window.location.href = role === 'attorney' ? '/attorney-intake' : '/tenant-intake'
+    router.push('/intake')
   }
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://tenantguard.net'

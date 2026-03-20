@@ -19,6 +19,7 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from blog.views import ai_generator_view, ai_generate_api
+from intake.payment_views import StripeWebhookView
 
 urlpatterns = [
     path("summernote/", include("django_summernote.urls")),
@@ -26,6 +27,7 @@ urlpatterns = [
     path("api/blog/", include("blog.urls")),
     path("api/chat/", include("chat.urls")),
     path("api/intake/", include("intake.urls")),
+    path("api/stripe/webhook/", StripeWebhookView.as_view(), name="stripe-webhook"),
     path("staff/todos/", include("stafftodo.urls", namespace="stafftodo")),
     path("admin/ai-generator/", ai_generator_view, name='ai-generator'),
     path("admin/blog/ai-generate-api/", ai_generate_api, name='ai-generate-api'),

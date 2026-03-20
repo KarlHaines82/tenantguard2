@@ -188,6 +188,17 @@ class IntakeSubmission(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    # ── Payment ───────────────────────────────────────────────────────────
+    PAYMENT_STATUS_CHOICES = [
+        ("unpaid", "Unpaid"),
+        ("paid", "Paid"),
+        ("waived", "Waived"),
+    ]
+    payment_status = models.CharField(
+        max_length=10, choices=PAYMENT_STATUS_CHOICES, default="unpaid"
+    )
+    stripe_session_id = models.CharField(max_length=255, blank=True)
+
     class Meta:
         ordering = ["-created_at"]
 
