@@ -52,7 +52,8 @@ def ai_generate_api(request):
         
         elif step == 'generate_content':
             topic = data.get('topic')
-            result = workflow.run_step_2(topic)
+            context_urls = [u for u in data.get('context_urls', []) if u and u.strip()]
+            result = workflow.run_step_2(topic, context_urls)
             return JsonResponse({'status': 'success', 'result': result})
         
         elif step == 'generate_image':

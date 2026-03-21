@@ -2,6 +2,7 @@ import os
 import re
 import openai
 import markdown as md
+from html.parser import HTMLParser
 from openai import OpenAI
 from django.conf import settings
 import requests
@@ -9,6 +10,46 @@ from django.core.files.base import ContentFile
 from .models import Post, Category
 from django.utils.text import slugify
 from pathlib import Path
+
+
+class _TextExtractor(HTMLParser):
+    """Minimal HTML-to-text stripper using stdlib only."""
+    def __init__(self):
+        super().__init__()
+        self._parts = []
+        self._skip = False
+
+    def handle_starttag(self, tag, attrs):
+        if tag in ("script", "style", "nav", "footer", "header"):
+            self._skip = True
+
+    def handle_endtag(self, tag):
+        if tag in ("script", "style", "nav", "footer", "header"):
+            self._skip = False
+        if tag in ("p", "br", "li", "h1", "h2", "h3", "h4", "h5", "h6", "tr"):
+            self._parts.append("\n")
+
+    def handle_data(self, data):
+        if not self._skip:
+            self._parts.append(data)
+
+    def get_text(self):
+        return re.sub(r'\n{3,}', '\n\n', "".join(self._parts)).strip()
+
+
+def _fetch_url_text(url: str, max_chars: int = 4000) -> str:
+    """Fetch a URL and return its readable text content, truncated to max_chars."""
+    try:
+        resp = requests.get(url, timeout=10, headers={"User-Agent": "TenantGuard-BlogBot/1.0"})
+        resp.raise_for_status()
+        parser = _TextExtractor()
+        parser.feed(resp.text)
+        text = parser.get_text()
+        if len(text) > max_chars:
+            text = text[:max_chars] + "\n[… truncated]"
+        return text
+    except Exception as e:
+        return f"[Could not fetch {url}: {e}]"
 
 class BaseAgent:
     def __init__(self, model="gpt-4-turbo-preview"):
@@ -55,16 +96,21 @@ class ContextualResearcherAgent(BaseAgent):
         
         return "\n\n".join(context_parts)
 
-    def research_topic(self, topic):
+    def research_topic(self, topic, url_context: str = ""):
         context = self.gather_context()
         system_prompt = (
             "You are the Head of Research at TenantGuard. Your job is to analyze a blog topic "
             "and provide a 'Briefing Note' for the author. This note MUST align the topic with "
             "TenantGuard's mission, specific audience (Tennessee tenants), and brand voice (Precision, Clarity)."
         )
+        url_section = (
+            f"\n\nAdditional reference material provided by the editor:\n{url_context}"
+            if url_context else ""
+        )
         user_prompt = (
             f"Topic: {topic}\n\n"
-            f"Here is the TenantGuard Project Context:\n{context}\n\n"
+            f"Here is the TenantGuard Project Context:\n{context}"
+            f"{url_section}\n\n"
             "Please provide a Briefing Note that includes:\n"
             "1. Core Narrative: How this topic serves our mission.\n"
             "2. Audience Angle: How this specifically helps a tenant in Davidson County, TN.\n"
@@ -166,9 +212,19 @@ class BlogGeneratorWorkflow:
     def run_step_1(self, theme):
         return self.topics_agent.get_topics(theme)
 
-    def run_step_2(self, topic):
-        # New Research Step
-        brief = self.researcher_agent.research_topic(topic)
+    def run_step_2(self, topic, context_urls: list = None):
+        url_context = ""
+        if context_urls:
+            fetched = []
+            for url in context_urls:
+                url = url.strip()
+                if url:
+                    text = _fetch_url_text(url)
+                    fetched.append(f"--- Source: {url} ---\n{text}")
+            if fetched:
+                url_context = "\n\n".join(fetched)
+
+        brief = self.researcher_agent.research_topic(topic, url_context)
         content = self.author_agent.write_article(topic, brief)
         review = self.reviewer_agent.review(content)
         seo = self.seo_agent.optimize(topic, content)

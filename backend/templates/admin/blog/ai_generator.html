@@ -123,6 +123,14 @@
                 <div class="spinner"></div>
             </button>
         </div>
+        <div style="margin-top: 18px; border-top: 1px solid #ddd; padding-top: 14px;">
+            <label style="font-weight: bold; display: block; margin-bottom: 8px;">Reference URLs <span style="font-weight: normal; color: #666;">(optional — content will be fetched and used as context when writing the article)</span></label>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                <input type="url" id="context-url-1" placeholder="https://example.com/article-1" style="width: 100%; padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px;">
+                <input type="url" id="context-url-2" placeholder="https://example.com/article-2" style="width: 100%; padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px;">
+                <input type="url" id="context-url-3" placeholder="https://example.com/article-3" style="width: 100%; padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px;">
+            </div>
+        </div>
         <div id="topics-output" class="topic-list" style="margin-top: 20px;">
             <!-- Topics will be loaded here -->
         </div>
@@ -190,6 +198,7 @@
     const state = {
         theme: '',
         selectedTopic: '',
+        contextUrls: [],
         content: '',
         seo: {},
         review: '',
@@ -280,7 +289,13 @@
 
     document.getElementById('btn-generate-content').addEventListener('click', async () => {
         toggleLoading('btn-generate-content', true);
-        
+
+        state.contextUrls = [
+            document.getElementById('context-url-1').value.trim(),
+            document.getElementById('context-url-2').value.trim(),
+            document.getElementById('context-url-3').value.trim(),
+        ].filter(Boolean);
+
         try {
             const response = await fetch('/admin/blog/ai-generate-api/', {
                 method: 'POST',
@@ -288,7 +303,7 @@
                     'Content-Type': 'application/json',
                     'X-CSRFToken': csrftoken
                 },
-                body: JSON.stringify({ step: 'generate_content', topic: state.selectedTopic })
+                body: JSON.stringify({ step: 'generate_content', topic: state.selectedTopic, context_urls: state.contextUrls })
             });
             const data = await response.json();
             
