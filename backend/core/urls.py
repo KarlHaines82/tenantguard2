@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from blog.views import ai_generator_view, ai_generate_api
+from blog.views import ai_generator_view, ai_generate_api, ai_posts_list_api, ai_post_load_api
 from intake.payment_views import StripeWebhookView
 
 urlpatterns = [
@@ -31,6 +31,8 @@ urlpatterns = [
     path("staff/todos/", include("stafftodo.urls", namespace="stafftodo")),
     path("admin/ai-generator/", ai_generator_view, name='ai-generator'),
     path("admin/blog/ai-generate-api/", ai_generate_api, name='ai-generate-api'),
+    path("admin/blog/ai-posts/", ai_posts_list_api, name='ai-posts-list'),
+    path("admin/blog/ai-post/<int:post_id>/", ai_post_load_api, name='ai-post-load'),
     path("admin/", admin.site.urls),
 ]
 

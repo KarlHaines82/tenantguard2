@@ -1,7 +1,7 @@
 from rest_framework import generics, permissions, filters
 from .models import Post, Category, Comment
 from .serializers import PostListSerializer, PostDetailSerializer, CategorySerializer, CommentSerializer
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.contrib.admin.views.decorators import staff_member_required
 from django.http import JsonResponse
 from .ai_agents import BlogGeneratorWorkflow
@@ -194,6 +194,27 @@ def ai_generate_api(request):
             result = workflow.run_step_2(topic, context_urls)
             return JsonResponse({'status': 'success', 'result': result})
 
+        elif step == 'revise_content':
+            topic = data.get('topic')
+            previous_content = data.get('previous_content', '')
+            feedback = data.get('feedback', '').strip()
+            research_brief = data.get('research_brief', '')
+            if not topic or not previous_content or not feedback:
+                return JsonResponse({'status': 'error', 'message': 'Missing required fields: topic, previous_content, feedback'}, status=400)
+            context_urls = [u for u in data.get('context_urls', []) if u and u.strip()]
+            result = workflow.run_step_2_revision(topic, previous_content, feedback, research_brief, context_urls)
+            return JsonResponse({'status': 'success', 'result': result})
+
+        elif step == 'revise_image':
+            title = data.get('title')
+            content = data.get('content')
+            previous_image_prompt = data.get('previous_image_prompt', '')
+            feedback = data.get('feedback', '').strip()
+            if not title or not content or not feedback:
+                return JsonResponse({'status': 'error', 'message': 'Missing required fields: title, content, feedback'}, status=400)
+            result = workflow.run_step_3_revision(title, content, previous_image_prompt, feedback)
+            return JsonResponse({'status': 'success', 'result': result})
+
         elif step == 'generate_image':
             title = data.get('title')
             content = data.get('content')
@@ -218,6 +239,23 @@ def ai_generate_api(request):
             )
             return JsonResponse({'status': 'success', 'post_id': post.id})
 
+        elif step == 'update_post':
+            post_id = data.get('post_id')
+            title = data.get('title')
+            content = data.get('content')
+            if not post_id or not title or not content:
+                return JsonResponse({'status': 'error', 'message': 'Missing required fields: post_id, title, content'}, status=400)
+            post = workflow.update_post(
+                post_id=post_id,
+                title=title,
+                content=content,
+                meta_title=data.get('meta_title') or title,
+                meta_description=data.get('meta_description') or '',
+                tags=data.get('tags') or '',
+                image_url=data.get('image_url'),
+            )
+            return JsonResponse({'status': 'success', 'post_id': post.id})
+
         return JsonResponse({'status': 'error', 'message': f'Unknown step: "{step}"'}, status=400)
 
     except Exception as e:
@@ -228,3 +266,35 @@ def ai_generate_api(request):
             'error_type': type(e).__name__,
             'step': step,
         }, status=500)
+
+
+def _staff_check(request):
+    return request.user.is_authenticated and request.user.is_staff
+
+
+def ai_posts_list_api(request):
+    if not _staff_check(request):
+        return JsonResponse({'status': 'error', 'message': 'Authentication required'}, status=403)
+    posts = list(
+        Post.objects
+        .order_by('-updated_at')
+        .values('id', 'title', 'status', 'created_at', 'updated_at', 'slug')[:150]
+    )
+    return JsonResponse({'status': 'success', 'posts': posts})
+
+
+def ai_post_load_api(request, post_id):
+    if not _staff_check(request):
+        return JsonResponse({'status': 'error', 'message': 'Authentication required'}, status=403)
+    post = get_object_or_404(Post, pk=post_id)
+    image_url = request.build_absolute_uri(post.featured_image.url) if post.featured_image else ''
+    return JsonResponse({'status': 'success', 'post': {
+        'id': post.id,
+        'title': post.title,
+        'content': post.content,  # stored HTML
+        'meta_title': post.meta_title,
+        'meta_description': post.meta_description,
+        'tags': ', '.join(t.name for t in post.tags.all()),
+        'status': post.status,
+        'image_url': image_url,
+    }})

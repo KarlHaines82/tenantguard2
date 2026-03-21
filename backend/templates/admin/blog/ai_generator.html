@@ -4,13 +4,111 @@
 {% block extrastyle %}
 {{ block.super }}
 <style>
-    .ai-container {
-        max-width: 1000px;
+    .ai-wrapper {
+        display: flex;
+        max-width: 1320px;
         margin: 20px auto;
-        padding: 20px;
         background: #fff;
         border-radius: 8px;
         box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        min-height: 80vh;
+        overflow: hidden;
+    }
+    .ai-sidebar {
+        width: 260px;
+        min-width: 260px;
+        background: #1e2d3d;
+        display: flex;
+        flex-direction: column;
+        border-radius: 8px 0 0 8px;
+    }
+    .ai-sidebar-header {
+        padding: 14px 14px 12px;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .ai-sidebar-label {
+        font-size: 0.72em;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: rgba(255,255,255,0.45);
+        font-weight: bold;
+    }
+    .ai-sidebar-new {
+        display: block;
+        width: 100%;
+        padding: 7px 10px;
+        background: #79aec8;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: bold;
+        font-size: 0.82em;
+        margin-top: 10px;
+        text-align: center;
+    }
+    .ai-sidebar-new:hover { background: #609ab6; }
+    .ai-sidebar-search {
+        width: 100%;
+        padding: 6px 9px;
+        border: 1px solid rgba(255,255,255,0.15);
+        border-radius: 4px;
+        background: rgba(255,255,255,0.08);
+        color: #ecf0f1;
+        font-size: 0.82em;
+        margin-top: 8px;
+        box-sizing: border-box;
+    }
+    .ai-sidebar-search::placeholder { color: rgba(255,255,255,0.35); }
+    .ai-sidebar-list {
+        flex: 1;
+        overflow-y: auto;
+        padding: 6px 0;
+    }
+    .sidebar-post-item {
+        padding: 9px 14px;
+        cursor: pointer;
+        border-left: 3px solid transparent;
+        transition: background 0.15s;
+    }
+    .sidebar-post-item:hover { background: rgba(255,255,255,0.07); }
+    .sidebar-post-item.active {
+        background: rgba(121,174,200,0.2);
+        border-left-color: #79aec8;
+    }
+    .sidebar-post-title {
+        font-size: 0.81em;
+        font-weight: 600;
+        color: #dde6ee;
+        margin-bottom: 3px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .sidebar-post-meta {
+        font-size: 0.7em;
+        color: rgba(255,255,255,0.4);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .sidebar-status {
+        padding: 1px 5px;
+        border-radius: 3px;
+        font-size: 0.85em;
+    }
+    .sidebar-status-draft { background: rgba(133,100,4,0.6); color: #fff3cd; }
+    .sidebar-status-published { background: rgba(21,87,36,0.6); color: #d4edda; }
+    .sidebar-empty {
+        padding: 16px 14px;
+        font-size: 0.8em;
+        color: rgba(255,255,255,0.35);
+        font-style: italic;
+    }
+    .ai-main {
+        flex: 1;
+        min-width: 0;
+        padding: 20px 24px;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
     .step-card {
@@ -187,9 +285,24 @@
 {% endblock %}
 
 {% block content %}
-<div class="ai-container">
-    <h1>🤖 AI Blog Article Writing Interface</h1>
-    <p>Powered by multiple specialized agents to help you write high-quality blog content.</p>
+<div class="ai-wrapper">
+
+    <!-- Sidebar -->
+    <div class="ai-sidebar">
+        <div class="ai-sidebar-header">
+            <div class="ai-sidebar-label">Articles</div>
+            <button type="button" class="ai-sidebar-new" onclick="resetToNewArticle()">+ New Article</button>
+            <input type="text" class="ai-sidebar-search" id="sidebar-search" placeholder="Filter articles…" oninput="filterSidebarPosts(this.value)">
+        </div>
+        <div class="ai-sidebar-list" id="sidebar-post-list">
+            <div class="sidebar-empty">Loading…</div>
+        </div>
+    </div>
+
+    <!-- Main workspace -->
+    <div class="ai-main">
+    <h1 style="margin-top: 4px;">AI Blog Article Writing Interface</h1>
+    <p style="color: #666; margin-bottom: 18px;">Powered by multiple specialized agents to help you write high-quality blog content.</p>
 
     <div class="error-banner" id="error-banner">
         <button type="button" class="error-banner-close" onclick="clearError()">✕</button>
@@ -254,7 +367,7 @@
 
             <h4>Article Content (Markdown):</h4>
             <div id="content-output" class="ai-content-area" contenteditable="true"></div>
-            
+
             <div style="display: flex; gap: 20px; margin-top: 20px;">
                 <div style="flex: 1;">
                     <h4>SEO Meta:</h4>
@@ -263,6 +376,18 @@
                 <div style="flex: 1;">
                     <h4>Fact-Check Review:</h4>
                     <div id="review-output" style="background: #fff3cd; padding: 10px; border-radius: 4px; color: #856404; border: 1px solid #ffeeba;"></div>
+                </div>
+            </div>
+
+            <div style="margin-top: 24px; padding: 16px; background: #f4f4f4; border: 1px solid #ddd; border-radius: 6px;">
+                <h4 style="margin: 0 0 10px; color: #447e9b;">Request Article Revisions</h4>
+                <textarea id="content-feedback" placeholder="Describe what you'd like changed — e.g. 'Make the intro more urgent', 'Add a section on Tennessee's 14-day cure notice', 'Cut the last section, it repeats earlier points'..." style="width: 100%; height: 90px; padding: 8px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9em; resize: vertical; box-sizing: border-box;"></textarea>
+                <div style="margin-top: 10px;">
+                    <button type="button" id="btn-revise-content" class="btn-ai">
+                        <span class="btn-text">Revise Article</span>
+                        <div class="spinner"></div>
+                    </button>
+                    <span id="revision-count-content" style="margin-left: 12px; font-size: 0.82em; color: #888;"></span>
                 </div>
             </div>
         </div>
@@ -278,20 +403,35 @@
             <span class="btn-text">Generate Featured Image</span>
             <div class="spinner"></div>
         </button>
-        <div id="image-output-container" style="display: none; margin-top: 20px; text-align: center;">
-            <img id="image-preview" src="" style="max-width: 512px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
-            <p id="image-prompt-display" style="font-style: italic; margin-top: 10px; color: #666;"></p>
+        <div id="image-output-container" style="display: none; margin-top: 20px;">
+            <div style="text-align: center;">
+                <img id="image-preview" src="" style="max-width: 512px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
+                <p id="image-prompt-display" style="font-style: italic; margin-top: 10px; color: #666;"></p>
+            </div>
+            <div style="margin-top: 20px; padding: 16px; background: #f4f4f4; border: 1px solid #ddd; border-radius: 6px;">
+                <h4 style="margin: 0 0 10px; color: #447e9b;">Request Image Revision</h4>
+                <textarea id="image-feedback" placeholder="Describe what you'd like changed — e.g. 'No people, use a document/paperwork theme', 'Warmer colours', 'More abstract, less literal'..." style="width: 100%; height: 70px; padding: 8px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9em; resize: vertical; box-sizing: border-box;"></textarea>
+                <div style="margin-top: 10px;">
+                    <button type="button" id="btn-revise-image" class="btn-ai">
+                        <span class="btn-text">Revise Image</span>
+                        <div class="spinner"></div>
+                    </button>
+                    <span id="revision-count-image" style="margin-left: 12px; font-size: 0.82em; color: #888;"></span>
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- Final Save -->
     <div id="final-actions" style="display: none; text-align: right; margin-top: 30px;">
         <button type="button" id="btn-save-post" class="btn-ai btn-save">
-            <span class="btn-text">Save as Draft to Database</span>
+            <span class="btn-text">Save as Draft</span>
             <div class="spinner"></div>
         </button>
     </div>
-</div>
+
+    </div><!-- /.ai-main -->
+</div><!-- /.ai-wrapper -->
 
 <script>
     const PREDEFINED_TOPICS = {{ predefined_topics_json|safe }};
@@ -340,11 +480,16 @@
         theme: '',
         selectedTopic: '',
         contextUrls: [],
+        researchBrief: '',
         content: '',
-        seo: {},
+        seo: '',
         review: '',
         imageUrl: '',
-        imagePrompt: ''
+        imagePrompt: '',
+        contentRevisions: 0,
+        imageRevisions: 0,
+        loadedPostId: null,      // set when a post is loaded from the sidebar
+        imageNewlyGenerated: false, // true only after generate/revise image
     };
 
     const getCookie = (name) => {
@@ -388,6 +533,29 @@
             throw new Error(`${type}${step}: ${data.message || 'Unknown server error'}`);
         }
         return data;
+    }
+
+    function applyContentResult(result) {
+        state.content = result.content || '';
+        state.review = result.review || '';
+        state.seo = result.seo || '';
+        state.researchBrief = result.research_brief || state.researchBrief;
+        document.getElementById('research-brief-output').textContent = state.researchBrief;
+        document.getElementById('content-output').textContent = state.content;
+        document.getElementById('seo-output').textContent = state.seo;
+        document.getElementById('review-output').textContent = state.review;
+    }
+
+    function applyImageResult(result) {
+        state.imageUrl = result.image_url || '';
+        state.imagePrompt = result.image_prompt || '';
+        if (state.imageUrl) {
+            document.getElementById('image-output-container').style.display = 'block';
+            document.getElementById('image-preview').src = state.imageUrl;
+            document.getElementById('image-prompt-display').textContent = 'Prompt: ' + state.imagePrompt;
+        } else {
+            showError('Image generation skipped', 'No image was returned (API key may be missing). Prompt used: ' + state.imagePrompt);
+        }
     }
 
     const toggleLoading = (btnId, isLoading) => {
@@ -464,17 +632,10 @@
         try {
             const data = await apiPost({ step: 'generate_content', topic: state.selectedTopic, context_urls: state.contextUrls });
 
-            state.content = data.result.content;
-            state.review = data.result.review;
-            state.seo = data.result.seo;
-            state.research_brief = data.result.research_brief;
+            state.contentRevisions = 0;
+            applyContentResult(data.result);
 
             document.getElementById('content-output-container').style.display = 'block';
-            document.getElementById('research-brief-output').textContent = state.research_brief || '';
-            document.getElementById('content-output').textContent = state.content || '';
-            document.getElementById('seo-output').textContent = state.seo || '';
-            document.getElementById('review-output').textContent = state.review || '';
-
             document.getElementById('step-3').style.display = 'block';
             document.getElementById('final-actions').style.display = 'block';
         } catch (error) {
@@ -494,21 +655,72 @@
                 title: state.selectedTopic,
                 content: state.content
             });
-
-            state.imageUrl = data.result.image_url;
-            state.imagePrompt = data.result.image_prompt;
-
-            if (state.imageUrl) {
-                document.getElementById('image-output-container').style.display = 'block';
-                document.getElementById('image-preview').src = state.imageUrl;
-                document.getElementById('image-prompt-display').textContent = 'Prompt: ' + state.imagePrompt;
-            } else {
-                showError('Image generation skipped', 'No image was returned (API key may be missing). Prompt used: ' + state.imagePrompt);
-            }
+            state.imageRevisions = 0;
+            state.imageNewlyGenerated = true;
+            applyImageResult(data.result);
         } catch (error) {
             showError('Image generation failed', error.message);
         } finally {
             toggleLoading('btn-generate-image', false);
+        }
+    });
+
+    document.getElementById('btn-revise-content').addEventListener('click', async () => {
+        clearError();
+        const feedback = document.getElementById('content-feedback').value.trim();
+        if (!feedback) {
+            showError('No feedback provided', 'Please describe what you would like changed before requesting a revision.');
+            return;
+        }
+        toggleLoading('btn-revise-content', true);
+        try {
+            const data = await apiPost({
+                step: 'revise_content',
+                topic: state.selectedTopic,
+                previous_content: document.getElementById('content-output').textContent,
+                feedback,
+                research_brief: state.researchBrief,
+                context_urls: state.contextUrls,
+            });
+            state.contentRevisions += 1;
+            applyContentResult(data.result);
+            document.getElementById('content-feedback').value = '';
+            const counter = document.getElementById('revision-count-content');
+            counter.textContent = `Revision ${state.contentRevisions} applied`;
+            document.getElementById('content-output').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } catch (error) {
+            showError('Article revision failed', error.message);
+        } finally {
+            toggleLoading('btn-revise-content', false);
+        }
+    });
+
+    document.getElementById('btn-revise-image').addEventListener('click', async () => {
+        clearError();
+        const feedback = document.getElementById('image-feedback').value.trim();
+        if (!feedback) {
+            showError('No feedback provided', 'Please describe what you would like changed before requesting a revision.');
+            return;
+        }
+        toggleLoading('btn-revise-image', true);
+        try {
+            const data = await apiPost({
+                step: 'revise_image',
+                title: state.selectedTopic,
+                content: state.content,
+                previous_image_prompt: state.imagePrompt,
+                feedback,
+            });
+            state.imageRevisions += 1;
+            state.imageNewlyGenerated = true;
+            applyImageResult(data.result);
+            document.getElementById('image-feedback').value = '';
+            const counter = document.getElementById('revision-count-image');
+            counter.textContent = `Revision ${state.imageRevisions} applied`;
+        } catch (error) {
+            showError('Image revision failed', error.message);
+        } finally {
+            toggleLoading('btn-revise-image', false);
         }
     });
 
@@ -527,17 +739,20 @@
         const meta_description = parseSeoField(seoText, 'META_DESCRIPTION') || '';
         const tags = parseSeoField(seoText, 'TAGS') || state.theme;
 
+        const isUpdate = !!state.loadedPostId;
         try {
             await apiPost({
-                step: 'save_post',
+                step: isUpdate ? 'update_post' : 'save_post',
+                ...(isUpdate ? { post_id: state.loadedPostId } : {}),
                 title: state.selectedTopic,
                 content: document.getElementById('content-output').textContent,
                 meta_title,
                 meta_description,
                 tags,
-                image_url: state.imageUrl
+                image_url: state.imageNewlyGenerated ? state.imageUrl : '',
             });
-            alert('Article saved successfully to drafts!');
+            alert(isUpdate ? 'Article updated successfully!' : 'Article saved as draft!');
+            loadSidebarPosts();
             window.location.href = '/admin/blog/post/';
         } catch (error) {
             showError('Save failed', error.message);
@@ -545,5 +760,166 @@
             toggleLoading('btn-save-post', false);
         }
     });
+
+    // ── Sidebar ──────────────────────────────────────────────────────────────
+
+    let allSidebarPosts = [];
+
+    function htmlToPlainText(html) {
+        const el = document.createElement('div');
+        el.innerHTML = html;
+        return el.textContent || '';
+    }
+
+    function formatDate(isoString) {
+        if (!isoString) return '';
+        const d = new Date(isoString);
+        return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    function renderSidebarPosts(posts) {
+        const list = document.getElementById('sidebar-post-list');
+        list.innerHTML = '';
+        if (!posts.length) {
+            const empty = document.createElement('div');
+            empty.className = 'sidebar-empty';
+            empty.textContent = 'No articles yet.';
+            list.appendChild(empty);
+            return;
+        }
+        posts.forEach(post => {
+            const item = document.createElement('div');
+            item.className = 'sidebar-post-item' + (state.loadedPostId === post.id ? ' active' : '');
+
+            const titleEl = document.createElement('div');
+            titleEl.className = 'sidebar-post-title';
+            titleEl.textContent = post.title;
+            titleEl.title = post.title;
+
+            const metaEl = document.createElement('div');
+            metaEl.className = 'sidebar-post-meta';
+
+            const dateEl = document.createElement('span');
+            dateEl.textContent = formatDate(post.updated_at || post.created_at);
+
+            const badge = document.createElement('span');
+            badge.className = 'sidebar-status sidebar-status-' + post.status;
+            badge.textContent = post.status;
+
+            metaEl.appendChild(dateEl);
+            metaEl.appendChild(badge);
+            item.appendChild(titleEl);
+            item.appendChild(metaEl);
+
+            item.addEventListener('click', () => loadPost(post.id));
+            list.appendChild(item);
+        });
+    }
+
+    async function loadSidebarPosts() {
+        try {
+            const resp = await fetch('/admin/blog/ai-posts/');
+            const data = await resp.json();
+            if (data.status === 'success') {
+                allSidebarPosts = data.posts;
+                renderSidebarPosts(allSidebarPosts);
+            }
+        } catch (e) {
+            document.getElementById('sidebar-post-list').innerHTML = '<div class="sidebar-empty">Could not load articles.</div>';
+        }
+    }
+
+    function filterSidebarPosts(query) {
+        const q = query.toLowerCase();
+        const filtered = q ? allSidebarPosts.filter(p => p.title.toLowerCase().includes(q)) : allSidebarPosts;
+        renderSidebarPosts(filtered);
+    }
+
+    async function loadPost(postId) {
+        clearError();
+        try {
+            const resp = await fetch('/admin/blog/ai-post/' + postId + '/');
+            const data = await resp.json();
+            if (data.status !== 'success') throw new Error(data.message || 'Failed to load post');
+            const post = data.post;
+
+            state.loadedPostId = post.id;
+            state.selectedTopic = post.title;
+            state.content = htmlToPlainText(post.content);
+            state.researchBrief = '';
+            state.seo = [
+                post.meta_title ? 'META_TITLE: ' + post.meta_title : '',
+                post.meta_description ? 'META_DESCRIPTION: ' + post.meta_description : '',
+                post.tags ? 'TAGS: ' + post.tags : '',
+            ].filter(Boolean).join('\n');
+            state.review = '';
+            state.imageUrl = post.image_url || '';
+            state.imagePrompt = '';
+            state.imageNewlyGenerated = false;
+            state.contentRevisions = 0;
+            state.imageRevisions = 0;
+
+            document.getElementById('selected-topic-display').textContent = 'Editing: ' + post.title;
+            document.getElementById('research-brief-output').textContent = '(Loaded from database — use the revision box below to make changes.)';
+            document.getElementById('content-output').textContent = state.content;
+            document.getElementById('seo-output').textContent = state.seo;
+            document.getElementById('review-output').textContent = '(Run a revision to get a fresh fact-check review.)';
+            document.getElementById('revision-count-content').textContent = '';
+            document.getElementById('revision-count-image').textContent = '';
+            document.getElementById('content-feedback').value = '';
+            document.getElementById('image-feedback').value = '';
+
+            document.getElementById('step-2').style.display = 'block';
+            document.getElementById('content-output-container').style.display = 'block';
+            document.getElementById('step-3').style.display = 'block';
+            document.getElementById('final-actions').style.display = 'block';
+            document.querySelector('#btn-save-post .btn-text').textContent = 'Save Changes';
+
+            if (post.image_url) {
+                document.getElementById('image-output-container').style.display = 'block';
+                document.getElementById('image-preview').src = post.image_url;
+                document.getElementById('image-prompt-display').textContent = '';
+            } else {
+                document.getElementById('image-output-container').style.display = 'none';
+            }
+
+            renderSidebarPosts(allSidebarPosts);
+            document.getElementById('step-2').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+        } catch (e) {
+            showError('Could not load article', e.message);
+        }
+    }
+
+    function resetToNewArticle() {
+        state.loadedPostId = null;
+        state.selectedTopic = '';
+        state.content = '';
+        state.researchBrief = '';
+        state.seo = '';
+        state.review = '';
+        state.imageUrl = '';
+        state.imagePrompt = '';
+        state.imageNewlyGenerated = false;
+        state.contentRevisions = 0;
+        state.imageRevisions = 0;
+
+        document.getElementById('step-2').style.display = 'none';
+        document.getElementById('step-3').style.display = 'none';
+        document.getElementById('final-actions').style.display = 'none';
+        document.getElementById('content-output-container').style.display = 'none';
+        document.getElementById('image-output-container').style.display = 'none';
+        document.getElementById('topics-output').innerHTML = '';
+        document.getElementById('content-feedback').value = '';
+        document.getElementById('image-feedback').value = '';
+        document.getElementById('revision-count-content').textContent = '';
+        document.getElementById('revision-count-image').textContent = '';
+        document.querySelector('#btn-save-post .btn-text').textContent = 'Save as Draft';
+        clearError();
+        renderSidebarPosts(allSidebarPosts);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    loadSidebarPosts();
 </script>
 {% endblock %}
