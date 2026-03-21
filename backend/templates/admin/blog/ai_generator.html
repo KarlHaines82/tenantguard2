@@ -54,6 +54,53 @@
         background: #d1e7dd;
         border-left: 4px solid #198754;
     }
+    .predefined-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 10px;
+        margin-top: 10px;
+    }
+    .predefined-card {
+        padding: 12px 14px;
+        border: 1px solid #cce0f0;
+        border-radius: 6px;
+        background: #f0f8ff;
+        cursor: pointer;
+        transition: background 0.15s, border-color 0.15s;
+    }
+    .predefined-card:hover {
+        background: #daeeff;
+        border-color: #79aec8;
+    }
+    .predefined-card.selected {
+        background: #d1e7dd;
+        border-color: #198754;
+        border-left: 4px solid #198754;
+    }
+    .predefined-card-title {
+        font-weight: bold;
+        font-size: 0.9em;
+        margin-bottom: 4px;
+        color: #2c5f7a;
+    }
+    .predefined-card-desc {
+        font-size: 0.8em;
+        color: #555;
+        line-height: 1.4;
+    }
+    .toggle-predefined {
+        background: none;
+        border: 1px solid #79aec8;
+        color: #447e9b;
+        padding: 5px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.85em;
+        margin-bottom: 10px;
+    }
+    .toggle-predefined:hover {
+        background: #eaf4fb;
+    }
     .ai-content-area {
         width: 100%;
         min-height: 300px;
@@ -115,6 +162,17 @@
             <h3>1. Content Strategy & Topic Selection</h3>
             <span class="agent-tag">topics_agent</span>
         </div>
+
+        <!-- Predefined topics -->
+        <div style="margin-bottom: 18px;">
+            <button class="toggle-predefined" id="btn-toggle-predefined" onclick="togglePredefined()">▼ Choose from pre-defined topics</button>
+            <div id="predefined-section" style="display: none;">
+                <p style="font-size: 0.85em; color: #666; margin: 0 0 8px;">Click a topic to select it and skip straight to article generation.</p>
+                <div class="predefined-grid" id="predefined-grid"></div>
+            </div>
+        </div>
+        <hr style="border: none; border-top: 1px solid #ddd; margin-bottom: 16px;">
+
         <div class="form-row">
             <label for="theme">Main Theme/Interests:</label>
             <input type="text" id="theme" value="Tenant Rights and Protection" style="width: 70%;">
@@ -195,6 +253,48 @@
 </div>
 
 <script>
+    const PREDEFINED_TOPICS = {{ predefined_topics_json|safe }};
+
+    function togglePredefined() {
+        const section = document.getElementById('predefined-section');
+        const btn = document.getElementById('btn-toggle-predefined');
+        const isOpen = section.style.display !== 'none';
+        section.style.display = isOpen ? 'none' : 'block';
+        btn.textContent = (isOpen ? '\u25bc' : '\u25b2') + ' Choose from pre-defined topics';
+    }
+
+    function selectPredefinedTopic(topic, cardEl) {
+        document.querySelectorAll('.predefined-card').forEach(function(el) { el.classList.remove('selected'); });
+        cardEl.classList.add('selected');
+        state.selectedTopic = topic.title;
+        document.getElementById('step-2').style.display = 'block';
+        document.getElementById('selected-topic-display').textContent = 'Selected Topic: ' + topic.title;
+        document.getElementById('step-2').scrollIntoView({ behavior: 'smooth' });
+        document.getElementById('predefined-section').style.display = 'none';
+        document.getElementById('btn-toggle-predefined').textContent = '\u25bc Choose from pre-defined topics';
+    }
+
+    (function renderPredefined() {
+        const grid = document.getElementById('predefined-grid');
+        PREDEFINED_TOPICS.forEach(function(topic) {
+            const card = document.createElement('div');
+            card.className = 'predefined-card';
+
+            const titleEl = document.createElement('div');
+            titleEl.className = 'predefined-card-title';
+            titleEl.textContent = topic.title;
+
+            const descEl = document.createElement('div');
+            descEl.className = 'predefined-card-desc';
+            descEl.textContent = topic.description;
+
+            card.appendChild(titleEl);
+            card.appendChild(descEl);
+            card.addEventListener('click', function() { selectPredefinedTopic(topic, card); });
+            grid.appendChild(card);
+        });
+    })();
+
     const state = {
         theme: '',
         selectedTopic: '',
