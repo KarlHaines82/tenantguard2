@@ -163,13 +163,21 @@ def ai_generator_view(request):
     })
 
 def ai_generate_api(request):
+    import traceback as _tb
     if not (request.user.is_authenticated and request.user.is_staff):
         return JsonResponse({'status': 'error', 'message': 'Authentication required. Please log in to Django admin.'}, status=403)
     if request.method != 'POST':
         return JsonResponse({'status': 'error', 'message': 'Only POST allowed'}, status=405)
-    
-    data = json.loads(request.body)
+
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError as e:
+        return JsonResponse({'status': 'error', 'message': f'Invalid JSON in request body: {e}'}, status=400)
+
     step = data.get('step')
+    if not step:
+        return JsonResponse({'status': 'error', 'message': 'Missing required field: step'}, status=400)
+
     workflow = BlogGeneratorWorkflow()
 
     try:
@@ -177,38 +185,46 @@ def ai_generate_api(request):
             theme = data.get('theme', 'Tenant Rights')
             result = workflow.run_step_1(theme)
             return JsonResponse({'status': 'success', 'result': result})
-        
+
         elif step == 'generate_content':
             topic = data.get('topic')
+            if not topic:
+                return JsonResponse({'status': 'error', 'message': 'Missing required field: topic'}, status=400)
             context_urls = [u for u in data.get('context_urls', []) if u and u.strip()]
             result = workflow.run_step_2(topic, context_urls)
             return JsonResponse({'status': 'success', 'result': result})
-        
+
         elif step == 'generate_image':
             title = data.get('title')
             content = data.get('content')
+            if not title or not content:
+                return JsonResponse({'status': 'error', 'message': 'Missing required fields: title and content'}, status=400)
             result = workflow.run_step_3(title, content)
             return JsonResponse({'status': 'success', 'result': result})
-        
+
         elif step == 'save_post':
             title = data.get('title')
             content = data.get('content')
-            meta_title = data.get('meta_title')
-            meta_description = data.get('meta_description')
-            tags = data.get('tags')
-            image_url = data.get('image_url')
-            
+            if not title or not content:
+                return JsonResponse({'status': 'error', 'message': 'Missing required fields: title and content'}, status=400)
             post = workflow.save_post(
                 title=title,
                 content=content,
-                meta_title=meta_title,
-                meta_description=meta_description,
-                tags=tags,
+                meta_title=data.get('meta_title') or title,
+                meta_description=data.get('meta_description') or '',
+                tags=data.get('tags') or '',
                 author_id=request.user.id,
-                image_url=image_url
+                image_url=data.get('image_url'),
             )
             return JsonResponse({'status': 'success', 'post_id': post.id})
-            
-        return JsonResponse({'status': 'error', 'message': 'Invalid step'}, status=400)
+
+        return JsonResponse({'status': 'error', 'message': f'Unknown step: "{step}"'}, status=400)
+
     except Exception as e:
-        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+        _tb.print_exc()  # full traceback in Django server console
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e),
+            'error_type': type(e).__name__,
+            'step': step,
+        }, status=500)

@@ -101,6 +101,41 @@
     .toggle-predefined:hover {
         background: #eaf4fb;
     }
+    .error-banner {
+        display: none;
+        background: #fff3cd;
+        border: 1px solid #ffc107;
+        border-left: 5px solid #dc3545;
+        border-radius: 4px;
+        padding: 14px 16px;
+        margin-bottom: 20px;
+        position: relative;
+    }
+    .error-banner.visible { display: block; }
+    .error-banner-title {
+        font-weight: bold;
+        color: #842029;
+        margin-bottom: 6px;
+        font-size: 0.95em;
+    }
+    .error-banner-body {
+        font-family: monospace;
+        font-size: 0.85em;
+        color: #495057;
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
+    .error-banner-close {
+        position: absolute;
+        top: 8px;
+        right: 12px;
+        cursor: pointer;
+        background: none;
+        border: none;
+        font-size: 1.1em;
+        color: #842029;
+        line-height: 1;
+    }
     .ai-content-area {
         width: 100%;
         min-height: 300px;
@@ -155,6 +190,12 @@
 <div class="ai-container">
     <h1>🤖 AI Blog Article Writing Interface</h1>
     <p>Powered by multiple specialized agents to help you write high-quality blog content.</p>
+
+    <div class="error-banner" id="error-banner">
+        <button type="button" class="error-banner-close" onclick="clearError()">✕</button>
+        <div class="error-banner-title" id="error-banner-title">Error</div>
+        <div class="error-banner-body" id="error-banner-body"></div>
+    </div>
 
     <!-- Step 1: Topics Agent -->
     <div class="step-card" id="step-1">
@@ -323,6 +364,32 @@
 
     const csrftoken = getCookie('csrftoken');
 
+    function showError(title, detail) {
+        document.getElementById('error-banner-title').textContent = title;
+        document.getElementById('error-banner-body').textContent = detail || '';
+        document.getElementById('error-banner').classList.add('visible');
+        document.getElementById('error-banner').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function clearError() {
+        document.getElementById('error-banner').classList.remove('visible');
+    }
+
+    async function apiPost(payload) {
+        const response = await fetch('/admin/blog/ai-generate-api/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
+            body: JSON.stringify(payload),
+        });
+        const data = await response.json();
+        if (!response.ok || data.status === 'error') {
+            const type = data.error_type ? `[${data.error_type}]` : `[HTTP ${response.status}]`;
+            const step = data.step ? ` during step "${data.step}"` : '';
+            throw new Error(`${type}${step}: ${data.message || 'Unknown server error'}`);
+        }
+        return data;
+    }
+
     const toggleLoading = (btnId, isLoading) => {
         const btn = document.getElementById(btnId);
         if (isLoading) {
@@ -335,59 +402,57 @@
     };
 
     document.getElementById('btn-get-topics').addEventListener('click', async () => {
+        clearError();
         const theme = document.getElementById('theme').value;
         state.theme = theme;
         toggleLoading('btn-get-topics', true);
-        
+
         try {
-            const response = await fetch('/admin/blog/ai-generate-api/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrftoken
-                },
-                body: JSON.stringify({ step: 'get_topics', theme })
-            });
-            const data = await response.json();
-            
+            const data = await apiPost({ step: 'get_topics', theme });
+
             const output = document.getElementById('topics-output');
-            output.innerHTML = `<h4>Suggested Topics:</h4>`;
-            
+            output.innerHTML = '';
+            const heading = document.createElement('h4');
+            heading.textContent = 'Suggested Topics:';
+            output.appendChild(heading);
+
             // Improved parsing: take all non-empty lines that aren't too short,
             // or use a more relaxed filter if the strict one yields nothing.
             let lines = data.result.split('\n').filter(l => l.trim() && (l.match(/^\d\./) || l.includes('Recommendation')));
-            
+
             if (lines.length === 0) {
-                // Fallback to any non-empty lines that look like topics
                 lines = data.result.split('\n').filter(l => l.trim().length > 10);
             }
-            
+
             if (lines.length === 0) {
-                output.innerHTML += `<p>No structured topics found. Raw response: ${data.result}</p>`;
+                const p = document.createElement('p');
+                p.textContent = 'No structured topics found. Raw response: ' + data.result;
+                output.appendChild(p);
             }
 
             lines.forEach(line => {
                 const div = document.createElement('div');
                 div.className = 'topic-item';
-                div.innerText = line;
+                div.textContent = line;
                 div.onclick = () => {
                     document.querySelectorAll('.topic-item').forEach(el => el.classList.remove('selected'));
                     div.classList.add('selected');
                     state.selectedTopic = line.replace(/^\d\.\s*/, '').split(' - ')[0].trim();
                     document.getElementById('step-2').style.display = 'block';
-                    document.getElementById('selected-topic-display').innerText = 'Selected Topic: ' + state.selectedTopic;
+                    document.getElementById('selected-topic-display').textContent = 'Selected Topic: ' + state.selectedTopic;
                     document.getElementById('step-2').scrollIntoView({ behavior: 'smooth' });
                 };
                 output.appendChild(div);
             });
         } catch (error) {
-            alert('Error fetching topics');
+            showError('Topic generation failed', error.message);
         } finally {
             toggleLoading('btn-get-topics', false);
         }
     });
 
     document.getElementById('btn-generate-content').addEventListener('click', async () => {
+        clearError();
         toggleLoading('btn-generate-content', true);
 
         state.contextUrls = [
@@ -397,107 +462,78 @@
         ].filter(Boolean);
 
         try {
-            const response = await fetch('/admin/blog/ai-generate-api/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrftoken
-                },
-                body: JSON.stringify({ step: 'generate_content', topic: state.selectedTopic, context_urls: state.contextUrls })
-            });
-            const data = await response.json();
-            
+            const data = await apiPost({ step: 'generate_content', topic: state.selectedTopic, context_urls: state.contextUrls });
+
             state.content = data.result.content;
             state.review = data.result.review;
             state.seo = data.result.seo;
             state.research_brief = data.result.research_brief;
 
             document.getElementById('content-output-container').style.display = 'block';
-            document.getElementById('research-brief-output').innerText = state.research_brief;
-            document.getElementById('content-output').innerText = state.content;
-            document.getElementById('seo-output').innerText = state.seo;
-            document.getElementById('review-output').innerText = state.review;
-            
+            document.getElementById('research-brief-output').textContent = state.research_brief;
+            document.getElementById('content-output').textContent = state.content;
+            document.getElementById('seo-output').textContent = state.seo;
+            document.getElementById('review-output').textContent = state.review;
+
             document.getElementById('step-3').style.display = 'block';
             document.getElementById('final-actions').style.display = 'block';
         } catch (error) {
-            alert('Error generating content');
+            showError('Content generation failed', error.message);
         } finally {
             toggleLoading('btn-generate-content', false);
         }
     });
 
     document.getElementById('btn-generate-image').addEventListener('click', async () => {
+        clearError();
         toggleLoading('btn-generate-image', true);
-        
+
         try {
-            const response = await fetch('/admin/blog/ai-generate-api/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrftoken
-                },
-                body: JSON.stringify({ 
-                    step: 'generate_image', 
-                    title: state.selectedTopic,
-                    content: state.content
-                })
+            const data = await apiPost({
+                step: 'generate_image',
+                title: state.selectedTopic,
+                content: state.content
             });
-            const data = await response.json();
-            
+
             state.imageUrl = data.result.image_url;
             state.imagePrompt = data.result.image_prompt;
 
             if (state.imageUrl) {
                 document.getElementById('image-output-container').style.display = 'block';
                 document.getElementById('image-preview').src = state.imageUrl;
-                document.getElementById('image-prompt-display').innerText = "Prompt: " + state.imagePrompt;
+                document.getElementById('image-prompt-display').textContent = 'Prompt: ' + state.imagePrompt;
             } else {
-                alert('Image generation failed or API key missing. Prompt: ' + state.imagePrompt);
+                showError('Image generation skipped', 'No image was returned (API key may be missing). Prompt used: ' + state.imagePrompt);
             }
         } catch (error) {
-            alert('Error generating image');
+            showError('Image generation failed', error.message);
         } finally {
             toggleLoading('btn-generate-image', false);
         }
     });
 
     document.getElementById('btn-save-post').addEventListener('click', async () => {
+        clearError();
         toggleLoading('btn-save-post', true);
-        
-        // Final SEO parsing (very basic for this demo)
-        const seoText = state.seo;
+
         const meta_title = state.selectedTopic;
-        const meta_description = "A comprehensive guide on " + state.selectedTopic;
-        const tags = "AI, Generated, " + state.theme;
+        const meta_description = 'A comprehensive guide on ' + state.selectedTopic;
+        const tags = 'AI, Generated, ' + state.theme;
 
         try {
-            const response = await fetch('/admin/blog/ai-generate-api/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrftoken
-                },
-                body: JSON.stringify({ 
-                    step: 'save_post',
-                    title: state.selectedTopic,
-                    content: document.getElementById('content-output').innerText,
-                    meta_title,
-                    meta_description,
-                    tags,
-                    image_url: state.imageUrl
-                })
+            await apiPost({
+                step: 'save_post',
+                title: state.selectedTopic,
+                content: document.getElementById('content-output').textContent,
+                meta_title,
+                meta_description,
+                tags,
+                image_url: state.imageUrl
             });
-            const data = await response.json();
-            
-            if (data.status === 'success') {
-                alert('Article saved successfully to drafts!');
-                window.location.href = '/admin/blog/post/';
-            } else {
-                alert('Error saving post: ' + data.message);
-            }
+            alert('Article saved successfully to drafts!');
+            window.location.href = '/admin/blog/post/';
         } catch (error) {
-            alert('Error saving post');
+            showError('Save failed', error.message);
         } finally {
             toggleLoading('btn-save-post', false);
         }
