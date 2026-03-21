@@ -470,10 +470,10 @@
             state.research_brief = data.result.research_brief;
 
             document.getElementById('content-output-container').style.display = 'block';
-            document.getElementById('research-brief-output').textContent = state.research_brief;
-            document.getElementById('content-output').textContent = state.content;
-            document.getElementById('seo-output').textContent = state.seo;
-            document.getElementById('review-output').textContent = state.review;
+            document.getElementById('research-brief-output').textContent = state.research_brief || '';
+            document.getElementById('content-output').textContent = state.content || '';
+            document.getElementById('seo-output').textContent = state.seo || '';
+            document.getElementById('review-output').textContent = state.review || '';
 
             document.getElementById('step-3').style.display = 'block';
             document.getElementById('final-actions').style.display = 'block';
@@ -512,13 +512,20 @@
         }
     });
 
+    function parseSeoField(seoText, fieldName) {
+        // Match "FIELD_NAME: value" lines returned by the SEO agent
+        const match = seoText.match(new RegExp(fieldName + ':\\s*(.+)', 'i'));
+        return match ? match[1].trim() : '';
+    }
+
     document.getElementById('btn-save-post').addEventListener('click', async () => {
         clearError();
         toggleLoading('btn-save-post', true);
 
-        const meta_title = state.selectedTopic;
-        const meta_description = 'A comprehensive guide on ' + state.selectedTopic;
-        const tags = 'AI, Generated, ' + state.theme;
+        const seoText = typeof state.seo === 'string' ? state.seo : '';
+        const meta_title = parseSeoField(seoText, 'META_TITLE') || state.selectedTopic;
+        const meta_description = parseSeoField(seoText, 'META_DESCRIPTION') || '';
+        const tags = parseSeoField(seoText, 'TAGS') || state.theme;
 
         try {
             await apiPost({
