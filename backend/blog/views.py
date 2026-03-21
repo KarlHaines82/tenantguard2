@@ -162,8 +162,9 @@ def ai_generator_view(request):
         'predefined_topics_json': _json.dumps(PREDEFINED_TOPICS),
     })
 
-@staff_member_required
 def ai_generate_api(request):
+    if not (request.user.is_authenticated and request.user.is_staff):
+        return JsonResponse({'status': 'error', 'message': 'Authentication required. Please log in to Django admin.'}, status=403)
     if request.method != 'POST':
         return JsonResponse({'status': 'error', 'message': 'Only POST allowed'}, status=405)
     
