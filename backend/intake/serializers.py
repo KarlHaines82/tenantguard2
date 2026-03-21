@@ -107,9 +107,11 @@ class IntakeSubmissionSerializer(serializers.ModelSerializer):
             "bar_number",
             "firm_name",
             "case_description",
+            # Payment
+            "payment_status",
             "created_at",
         ]
-        read_only_fields = ["status", "full_name", "created_at"]
+        read_only_fields = ["status", "payment_status", "full_name", "created_at"]
 
 
 class IntakeSubmissionDetailSerializer(IntakeSubmissionSerializer):

@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { ArrowRight, FileText, Gavel, Shield, CheckCircle, Clock, TrendingUp } from 'lucide-react'
 import Navbar from '@/components/Navbar'
 import { useSession, signIn } from 'next-auth/react'
+import { useRouter } from 'next/router'
 import { getPosts, fixMediaUrl } from '@/lib/api'
 
 const fadeUp = {
@@ -29,6 +30,7 @@ const cardHover = {
 
 export default function Home({ recentPosts }: { recentPosts: any[] }) {
   const { data: session } = useSession()
+  const router = useRouter()
   const [activeTab, setActiveTab] = useState<'tenant' | 'attorney'>('tenant')
 
   const scrollToSection = (sectionId: string) => {

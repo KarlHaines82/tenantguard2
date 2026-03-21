@@ -52,6 +52,7 @@ const SIGN_IN_HANDLERS = {
 };
 const SIGN_IN_PROVIDERS = Object.keys(SIGN_IN_HANDLERS);
 
+/** @type {import('next-auth').AuthOptions} */
 export const authOptions = {
   secret: process.env.AUTH_SECRET,
   session: {
