@@ -1,6 +1,14 @@
 {% extends "admin/base.html" %}
 {% load static i18n %}
 
+{% block branding %}
+<h1 id="site-name">
+  <a href="{% url 'admin:index' %}">{% trans site_header|default:_('Django administration') %}</a>
+  &nbsp;·&nbsp;
+  <a href="/" style="font-size: 0.75rem; font-weight: 400; opacity: 0.7;">← View Site</a>
+</h1>
+{% endblock %}
+
 {% block extrahead %}
   {{ block.super }}
   {% if request.user.is_authenticated and request.user.is_staff %}

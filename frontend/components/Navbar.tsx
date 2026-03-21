@@ -243,11 +243,11 @@ const Navbar = ({
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
             >
-              <nav className="flex flex-col items-end py-2 pr-[10px]">
+              <nav className="flex flex-col items-start py-2 px-2">
                 {navItems.map((item, i) => (
                   <motion.div
                     key={item.id}
-                    initial={{ opacity: 0, x: 16 }}
+                    initial={{ opacity: 0, x: -16 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.05, duration: 0.2 }}
                     className="w-full"
@@ -255,7 +255,7 @@ const Navbar = ({
                     <Button
                       variant="ghost"
                       style={{ color: 'var(--color-textSecondary)' }}
-                      className="w-full justify-end text-right hover:opacity-80"
+                      className="w-full justify-start text-left hover:opacity-80 h-11"
                       onClick={() => handleNavClick(item.id)}
                     >
                       {item.label}
@@ -263,26 +263,32 @@ const Navbar = ({
                   </motion.div>
                 ))}
               </nav>
-              <div className="flex flex-col items-end gap-2 pb-4 pl-4 pr-[10px]">
+              <div className="flex flex-col gap-2 pb-4 px-2">
+                <Button
+                  className="w-full bg-primary hover:opacity-90 text-white h-11"
+                  onClick={() => { router.push('/intake'); setIsMobileMenuOpen(false) }}
+                >
+                  Get Help Now
+                </Button>
                 {session ? (
                   <div className="flex flex-col gap-2 w-full">
                     <Button
                       variant="ghost"
-                      className="w-full justify-end gap-2"
+                      className="w-full justify-start gap-2 h-11"
                       onClick={() => setIsMobileUserOpen((open) => !open)}
                     >
                       <span className="flex items-center gap-2">
                         <User className="h-4 w-4" />
                         {getUserDisplayText()}
                       </span>
-                      <motion.div animate={{ rotate: isMobileUserOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                      <motion.div animate={{ rotate: isMobileUserOpen ? 180 : 0 }} transition={{ duration: 0.2 }} className="ml-auto">
                         <ChevronDown className="h-4 w-4" />
                       </motion.div>
                     </Button>
                     <AnimatePresence>
                       {isMobileUserOpen && (
                         <motion.div
-                          className="flex flex-col gap-1 pr-6"
+                          className="flex flex-col gap-1 pl-4"
                           initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: 'auto' }}
                           exit={{ opacity: 0, height: 0 }}
@@ -291,7 +297,7 @@ const Navbar = ({
                           {(session as any).user?.role === 'admin' && (
                             <Button
                               variant="ghost"
-                              className="w-full justify-end text-right"
+                              className="w-full justify-start h-11"
                               onClick={() => {
                                 setIsMobileMenuOpen(false)
                                 setIsMobileUserOpen(false)
@@ -304,7 +310,7 @@ const Navbar = ({
                           )}
                           <Button
                             variant="ghost"
-                            className="w-full justify-end text-right text-red-600 hover:text-red-600"
+                            className="w-full justify-start h-11 text-red-600 hover:text-red-600"
                             onClick={() => signOut()}
                           >
                             <LogOut className="mr-2 h-4 w-4" />
@@ -317,7 +323,7 @@ const Navbar = ({
                 ) : (
                   <Button
                     variant="ghost"
-                    className="w-full justify-end text-right"
+                    className="w-full justify-start h-11"
                     onClick={() => signIn()}
                   >
                     Login

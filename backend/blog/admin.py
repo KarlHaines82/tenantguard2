@@ -19,6 +19,7 @@ class PostAdmin(SummernoteModelAdmin):
     prepopulated_fields = {'slug': ('title',)}
     date_hierarchy = 'created_at'
     ordering = ('status', '-created_at')
+    readonly_fields = ('updated_at',)
 
     # Add a custom button to the admin top bar
     change_list_template = "admin/blog/post_changelist.html"

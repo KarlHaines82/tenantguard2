@@ -5,6 +5,7 @@ export default function Document() {
     <Html lang='en'>
       <Head>
         <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#1a56db" />
         <link rel="icon" href="/favicon.ico" />
         <link rel="canonical" href="https://tenantguard.net" />

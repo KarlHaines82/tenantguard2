@@ -311,7 +311,7 @@ export default function IntakePage() {
         </AnimatePresence>
 
         {/* ── Chat window ──────────────────────────────────────────────── */}
-        <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col overflow-hidden min-h-[500px]">
+        <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col overflow-hidden min-h-[400px] sm:min-h-[500px]">
 
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
@@ -377,7 +377,7 @@ export default function IntakePage() {
                   placeholder="Tell us what's happening…"
                   rows={1}
                   disabled={isStreaming}
-                  className="flex-1 resize-none rounded-xl border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-50 min-h-[44px] max-h-[160px] leading-relaxed"
+                  className="flex-1 resize-none rounded-xl border border-gray-200 px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-50 min-h-[44px] max-h-[160px] leading-relaxed"
                 />
                 <Button
                   type="submit"

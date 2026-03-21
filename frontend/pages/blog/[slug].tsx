@@ -136,7 +136,7 @@ export default function BlogPost({ post: initialPost }: { post: PostDetail }) {
                 </Badge>
               )}
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 leading-tight">
+            <h1 className="text-2xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-6 leading-tight">
               {post.title}
             </h1>
             <div className="flex items-center gap-6 text-gray-500 text-sm">
@@ -164,7 +164,7 @@ export default function BlogPost({ post: initialPost }: { post: PostDetail }) {
           )}
 
           <div 
-            className="prose prose-lg max-w-none prose-primary prose-headings:font-bold prose-headings:text-gray-900 prose-p:text-gray-700 prose-a:text-primary hover:prose-a:underline"
+            className="prose prose-sm md:prose-lg max-w-none prose-primary prose-headings:font-bold prose-headings:text-gray-900 prose-p:text-gray-700 prose-a:text-primary hover:prose-a:underline"
             dangerouslySetInnerHTML={{ __html: post.content }}
           />
 
@@ -210,7 +210,7 @@ export default function BlogPost({ post: initialPost }: { post: PostDetail }) {
             {session ? (
               <form onSubmit={handleCommentSubmit} className="space-y-4">
                 <textarea
-                  className="w-full p-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/50 min-h-[120px]"
+                  className="w-full p-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/50 min-h-[120px] text-base"
                   placeholder="Share your thoughts..."
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}

@@ -521,7 +521,7 @@ function NotebookResults({ notebook }: { notebook: Notebook }) {
             {notebook.disputed_points.map((d, i) => (
               <div key={i} className="text-sm">
                 <p className="font-semibold text-gray-900 mb-1">{d.issue}</p>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <div className="bg-blue-50 rounded-lg p-2">
                     <p className="text-[10px] font-bold text-blue-700 uppercase tracking-wide mb-1">Your Position</p>
                     <p className="text-blue-900">{d.tenant_position}</p>
@@ -666,7 +666,7 @@ export default function CasePage({ initialSubmission, priceDisplay }: Props) {
             {/* Case summary card */}
             <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
               <h2 className="font-semibold text-gray-900 mb-3">Case Summary</h2>
-              <dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+              <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
                 {submission.issue_type && (
                   <>
                     <dt className="text-gray-500">Issue</dt>

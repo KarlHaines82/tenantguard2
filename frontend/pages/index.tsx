@@ -99,7 +99,7 @@ export default function Home({ recentPosts }: { recentPosts: any[] }) {
             <motion.div variants={fadeUp} custom={0}>
               <Badge variant="outline" className="mb-6 border-primary text-primary">Tenant-first</Badge>
             </motion.div>
-            <motion.h1 variants={fadeUp} custom={1} className="text-5xl md:text-6xl font-bold mb-6 text-gray-900">
+            <motion.h1 variants={fadeUp} custom={1} className="text-3xl sm:text-5xl md:text-6xl font-bold mb-6 text-gray-900">
               Transforming Tenant
               <span className="block text-primary">Legal Representation</span>
             </motion.h1>
@@ -353,7 +353,7 @@ export default function Home({ recentPosts }: { recentPosts: any[] }) {
         {/* ── CTA ───────────────────────────────────────────────────────────── */}
         <motion.section className="py-20 bg-red-800 text-white" initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
           <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-            <motion.h2 className="text-4xl font-bold mb-6" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.1 }}>
+            <motion.h2 className="text-2xl sm:text-4xl font-bold mb-6" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.1 }}>
               Ready to Transform Tenant Legal Representation?
             </motion.h2>
             <motion.p className="text-xl mb-8 opacity-90" initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.2 }}>

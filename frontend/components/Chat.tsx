@@ -88,7 +88,7 @@ const Chat = () => {
   }
 
   return (
-    <div className="fixed bottom-6 right-6 w-80 md:w-96 z-50">
+    <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 w-[calc(100vw-32px)] max-w-sm sm:w-80 md:w-96 z-50">
       <Card className="shadow-2xl border-primary/20 overflow-hidden">
         <CardHeader className="bg-primary text-white p-4 rounded-t-xl flex flex-row items-center justify-between">
           <div>
@@ -163,7 +163,7 @@ const Chat = () => {
                 <input
                   type="text"
                   placeholder="Ask about your rights..."
-                  className="flex-1 px-3 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm"
+                  className="flex-1 px-3 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/50 text-base"
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   disabled={loading}

@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils import timezone
 from django.utils.text import slugify
 from django_summernote.fields import SummernoteTextField
 from taggit.managers import TaggableManager
@@ -31,7 +32,7 @@ class Post(models.Model):
     featured_image = models.ImageField(upload_to='blog/images/', blank=True, null=True)
     content = SummernoteTextField()
     excerpt = models.TextField(blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='draft')
     tags = TaggableManager()
