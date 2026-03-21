@@ -101,27 +101,20 @@ export default function IntakePage() {
       pending: true,
     }
 
-    // Build new messages state (filter out hidden start message from history)
+    // Build history synchronously from the current messages snapshot.
+    // Do this BEFORE calling setMessages — setMessages updaters run during
+    // React reconciliation, not immediately, so reading inside them would
+    // always produce an empty history by the time the API call fires.
+    const history: ChatMessage[] = messages
+      .filter((m) => !m.pending && m.content)
+      .map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content }))
+    history.push({ role: 'user', content: userText })
+
+    // Update UI
     setMessages((prev) => {
       const visible = hidden ? prev : [...prev, userMsg]
       return [...visible, assistantPlaceholder]
     })
-
-    // Build history for API call (always include the user message)
-    const history: ChatMessage[] = []
-    setMessages((prev) => {
-      prev.forEach((m) => {
-        if (!m.pending && m.content) {
-          history.push({ role: m.role, content: m.content })
-        }
-      })
-      return prev
-    })
-    if (!hidden) {
-      history.push({ role: 'user', content: userText })
-    } else {
-      history.push({ role: 'user', content: userText })
-    }
 
     setIsStreaming(true)
     let streamedContent = ''
