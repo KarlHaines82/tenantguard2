@@ -9,7 +9,6 @@ services:
     environment:
       - DJANGO_SETTINGS_MODULE=core.settings
     volumes:
-      - media_files:/app/media
       - ./ssl_certs:/ssl_certs:ro
     expose:
       - "8000"
@@ -32,7 +31,6 @@ services:
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./ssl_certs:/etc/nginx/ssl:ro
-      - media_files:/var/www/media:ro
     depends_on:
       - backend
       - frontend
@@ -51,5 +49,3 @@ services:
     expose:
       - "5432"
 
-volumes:
-  media_files:

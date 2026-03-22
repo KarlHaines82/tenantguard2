@@ -70,11 +70,14 @@ jobs:
           username: ${{ secrets.STAGING_SSH_USER }}
           password: ${{ secrets.STAGING_SSH_PASSWORD }}
           key: ${{ secrets.STAGING_SSH_KEY }}
-          envs: IMAGE_TAG,ARTIFACT_REGISTRY,CLOUD_SQL_CONN
+          envs: IMAGE_TAG,ARTIFACT_REGISTRY,CLOUD_SQL_CONN,GCS_SECRETS_BUCKET
           script: |
             set -e
             cd /opt/tenantguard
             git pull origin main
+            export DEPLOY_ENV=staging
+            export GCS_SECRETS_BUCKET="$GCS_SECRETS_BUCKET"
+            bash scripts/fetch-env.sh
             export ARTIFACT_REGISTRY="$ARTIFACT_REGISTRY"
             export IMAGE_TAG="$IMAGE_TAG"
             export CLOUD_SQL_INSTANCE_CONNECTION_NAME="$CLOUD_SQL_CONN"
@@ -86,6 +89,7 @@ jobs:
           IMAGE_TAG: ${{ needs.build.outputs.image_tag }}
           ARTIFACT_REGISTRY: ${{ env.ARTIFACT_REGISTRY }}
           CLOUD_SQL_CONN: ${{ secrets.CLOUD_SQL_INSTANCE_CONNECTION_NAME }}
+          GCS_SECRETS_BUCKET: ${{ vars.GCS_SECRETS_BUCKET }}
 
   deploy-production:
     name: Deploy to Production
@@ -105,12 +109,15 @@ jobs:
           username: ${{ secrets.PROD_SSH_USER }}
           password: ${{ secrets.STAGING_SSH_PASSWORD }}
           key: ${{ secrets.PROD_SSH_KEY }}
-          envs: IMAGE_TAG,ARTIFACT_REGISTRY,CLOUD_SQL_CONN,GIT_TAG
+          envs: IMAGE_TAG,ARTIFACT_REGISTRY,CLOUD_SQL_CONN,GIT_TAG,GCS_SECRETS_BUCKET
           script: |
             set -e
             cd /opt/tenantguard
             git fetch --tags
             git checkout "$GIT_TAG"
+            export DEPLOY_ENV=prod
+            export GCS_SECRETS_BUCKET="$GCS_SECRETS_BUCKET"
+            bash scripts/fetch-env.sh
             export ARTIFACT_REGISTRY="$ARTIFACT_REGISTRY"
             export IMAGE_TAG="$IMAGE_TAG"
             export CLOUD_SQL_INSTANCE_CONNECTION_NAME="$CLOUD_SQL_CONN"
@@ -123,3 +130,4 @@ jobs:
           ARTIFACT_REGISTRY: ${{ env.ARTIFACT_REGISTRY }}
           CLOUD_SQL_CONN: ${{ secrets.CLOUD_SQL_INSTANCE_CONNECTION_NAME }}
           GIT_TAG: ${{ github.ref_name }}
+          GCS_SECRETS_BUCKET: ${{ vars.GCS_SECRETS_BUCKET }}

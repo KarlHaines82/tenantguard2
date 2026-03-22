@@ -311,6 +311,17 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
+# Google Cloud Storage for media files.
+# On GCE VMs, credentials are picked up automatically via the instance service account.
+# For local dev, either leave GCS_MEDIA_BUCKET unset (uses local filesystem above),
+# or run `gcloud auth application-default login` and set GCS_MEDIA_BUCKET.
+_GCS_BUCKET = os.environ.get("GCS_MEDIA_BUCKET")
+if _GCS_BUCKET:
+    DEFAULT_FILE_STORAGE = "storages.backends.gcloud.GoogleCloudStorage"
+    GS_BUCKET_NAME = _GCS_BUCKET
+    GS_DEFAULT_ACL = "publicRead"
+    MEDIA_URL = f"https://storage.googleapis.com/{_GCS_BUCKET}/"
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
