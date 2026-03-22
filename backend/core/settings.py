@@ -227,6 +227,8 @@ SOCIALACCOUNT_PROVIDERS = {
     },
 }
 
+FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:3000")
+
 JAZZMIN_SETTINGS = {
     "site_title": "TenantGuard Admin",
     "site_header": "TenantGuard",
@@ -244,6 +246,11 @@ JAZZMIN_SETTINGS = {
             "permissions": ["auth.view_user"],
         },
         {"app": "blog"},
+        {
+            "name": "← View Site",
+            "url": FRONTEND_URL,
+            "new_window": True,
+        },
     ],
     "show_sidebar": True,
     "navigation_expanded": True,

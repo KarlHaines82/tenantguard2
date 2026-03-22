@@ -9,9 +9,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { ChevronDown, User, LogOut, Settings } from 'lucide-react'
+import { ChevronDown, User, LogOut, Shield, FolderOpen, HelpCircle } from 'lucide-react'
 import { useSession, signIn, signOut } from "next-auth/react"
 import { useRouter } from 'next/router'
+import axios from 'axios'
 
 const Navbar = ({
   onDashboard,
@@ -26,6 +27,28 @@ const Navbar = ({
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false)
   const [isMobileUserOpen, setIsMobileUserOpen] = React.useState(false)
+  const [openCaseId, setOpenCaseId] = React.useState<number | null>(null)
+
+  const isStaff = (session as any)?.user?.is_staff === true
+
+  const adminUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/')
+    .replace(/\/api\/?$/, '/admin/')
+
+  React.useEffect(() => {
+    if (!session || isStaff) return
+    const token = (session as any).access_token
+    axios
+      .get(`${process.env.NEXT_PUBLIC_API_URL}intake/`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((res) => {
+        const submissions = res.data?.results ?? res.data
+        if (Array.isArray(submissions) && submissions.length > 0) {
+          setOpenCaseId(submissions[0].id)
+        }
+      })
+      .catch(() => {})
+  }, [session, isStaff])
 
   const navItems = [
     { id: 'home', label: 'Home' },
@@ -160,23 +183,43 @@ const Navbar = ({
                     </div>
                   </DropdownMenuLabel>
 
-                  <DropdownMenuSeparator 
-                    style={{ backgroundColor: 'var(--color-cardBorder)' }} 
+                  <DropdownMenuSeparator
+                    style={{ backgroundColor: 'var(--color-cardBorder)' }}
                   />
 
-                  {(session as any).user?.role === 'admin' && (
-                    <DropdownMenuItem 
-                      onClick={() => onDashboard && onDashboard()}
+                  {isStaff ? (
+                    <DropdownMenuItem
+                      asChild
                       className="cursor-pointer justify-end text-right sm:justify-start sm:text-left"
                       style={{ color: 'var(--color-text)' }}
                     >
-                      <Settings className="mr-2 h-4 w-4" />
-                      <span>Dashboard</span>
+                      <a href={adminUrl} target="_blank" rel="noreferrer">
+                        <Shield className="mr-2 h-4 w-4" />
+                        <span>Admin Panel</span>
+                      </a>
+                    </DropdownMenuItem>
+                  ) : openCaseId !== null ? (
+                    <DropdownMenuItem
+                      onClick={() => router.push(`/case/${openCaseId}`)}
+                      className="cursor-pointer justify-end text-right sm:justify-start sm:text-left"
+                      style={{ color: 'var(--color-text)' }}
+                    >
+                      <FolderOpen className="mr-2 h-4 w-4" />
+                      <span>My Case</span>
+                    </DropdownMenuItem>
+                  ) : (
+                    <DropdownMenuItem
+                      onClick={() => router.push('/intake')}
+                      className="cursor-pointer justify-end text-right sm:justify-start sm:text-left"
+                      style={{ color: 'var(--color-text)' }}
+                    >
+                      <HelpCircle className="mr-2 h-4 w-4" />
+                      <span>Get Help</span>
                     </DropdownMenuItem>
                   )}
 
-                  <DropdownMenuSeparator 
-                    style={{ backgroundColor: 'var(--color-cardBorder)' }} 
+                  <DropdownMenuSeparator
+                    style={{ backgroundColor: 'var(--color-cardBorder)' }}
                   />
 
                   <DropdownMenuItem 
@@ -294,18 +337,44 @@ const Navbar = ({
                           exit={{ opacity: 0, height: 0 }}
                           transition={{ duration: 0.2 }}
                         >
-                          {(session as any).user?.role === 'admin' && (
+                          {isStaff ? (
                             <Button
                               variant="ghost"
                               className="w-full justify-start h-11"
                               onClick={() => {
                                 setIsMobileMenuOpen(false)
                                 setIsMobileUserOpen(false)
-                                if (onDashboard) onDashboard()
+                                window.open(adminUrl, '_blank')
                               }}
                             >
-                              <Settings className="mr-2 h-4 w-4" />
-                              Dashboard
+                              <Shield className="mr-2 h-4 w-4" />
+                              Admin Panel
+                            </Button>
+                          ) : openCaseId !== null ? (
+                            <Button
+                              variant="ghost"
+                              className="w-full justify-start h-11"
+                              onClick={() => {
+                                setIsMobileMenuOpen(false)
+                                setIsMobileUserOpen(false)
+                                router.push(`/case/${openCaseId}`)
+                              }}
+                            >
+                              <FolderOpen className="mr-2 h-4 w-4" />
+                              My Case
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="ghost"
+                              className="w-full justify-start h-11"
+                              onClick={() => {
+                                setIsMobileMenuOpen(false)
+                                setIsMobileUserOpen(false)
+                                router.push('/intake')
+                              }}
+                            >
+                              <HelpCircle className="mr-2 h-4 w-4" />
+                              Get Help
                             </Button>
                           )}
                           <Button
