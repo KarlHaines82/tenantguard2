@@ -34,7 +34,7 @@ class CaseNotebookSerializer(serializers.ModelSerializer):
 
 
 class IntakeSubmissionSerializer(serializers.ModelSerializer):
-    full_name = serializers.CharField(source="full_name", read_only=True)
+    full_name = serializers.CharField(read_only=True)
 
     class Meta:
         model = IntakeSubmission
