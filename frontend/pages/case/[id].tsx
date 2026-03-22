@@ -752,18 +752,23 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     return { notFound: true }
   }
 
+  if (!token) {
+    console.error(`[case/${id}] No access_token in session — redirecting to sign-in`)
+    return { redirect: { destination: '/api/auth/signin', permanent: false } }
+  }
+
   try {
-    const [submission] = await Promise.all([
-      getIntakeSubmission(id, token),
-    ])
-
-    // Simple price default — the real price endpoint requires auth which SSR has
+    const submission = await getIntakeSubmission(id, token)
     const priceDisplay = process.env.INTAKE_ANALYSIS_PRICE_DISPLAY ?? '$49'
+    return { props: { initialSubmission: submission, priceDisplay } }
+  } catch (err: any) {
+    const status = err?.response?.status
+    const data = err?.response?.data
+    console.error(`[case/${id}] Backend error ${status}:`, data ?? err?.message)
 
-    return {
-      props: { initialSubmission: submission, priceDisplay },
+    if (status === 401 || status === 403) {
+      return { redirect: { destination: '/api/auth/signin', permanent: false } }
     }
-  } catch {
     return { notFound: true }
   }
 }
