@@ -80,7 +80,7 @@ const Chat = () => {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 p-4 bg-primary text-white rounded-full shadow-lg hover:opacity-90 transition-all z-50"
+        className="fixed bottom-6 right-6 p-4 bg-red-800 text-white rounded-full shadow-lg hover:opacity-90 transition-all z-50"
       >
         <MessageCircle className="h-6 w-6" />
       </button>
@@ -89,8 +89,8 @@ const Chat = () => {
 
   return (
     <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 w-[calc(100vw-32px)] max-w-sm sm:w-80 md:w-96 z-50">
-      <Card className="shadow-2xl border-primary/20 overflow-hidden">
-        <CardHeader className="bg-primary text-white p-4 rounded-t-xl flex flex-row items-center justify-between">
+      <Card className="shadow-2xl border-red-800/20 overflow-hidden">
+        <CardHeader className="bg-red-800 text-white p-4 rounded-t-xl flex flex-row items-center justify-between">
           <div>
             <CardTitle className="text-base">Legal Assistant</CardTitle>
             <p className="text-xs opacity-80 mt-0.5">Ask about your tenant rights</p>
@@ -131,7 +131,7 @@ const Chat = () => {
                         )}
                         <div className={`p-3 rounded-2xl text-sm ${
                           isUser
-                            ? 'bg-primary text-white rounded-tr-none'
+                            ? 'bg-red-800 text-white rounded-tr-none'
                             : m.sender_type === 'staff'
                               ? 'bg-blue-50 text-blue-900 border border-blue-100 rounded-tl-none'
                               : 'bg-gray-100 text-gray-800 rounded-tl-none'
@@ -163,7 +163,7 @@ const Chat = () => {
                 <input
                   type="text"
                   placeholder="Ask about your rights..."
-                  className="flex-1 px-3 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/50 text-base"
+                  className="flex-1 px-3 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-red-800/50 text-base"
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   disabled={loading}
@@ -171,7 +171,7 @@ const Chat = () => {
                 <button
                   type="submit"
                   disabled={loading || !newMessage.trim()}
-                  className="p-2 bg-primary text-white rounded-lg hover:opacity-90 disabled:opacity-50 transition-opacity"
+                  className="p-2 bg-red-800 text-white rounded-lg hover:opacity-90 disabled:opacity-50 transition-opacity"
                 >
                   <Send className="h-4 w-4" />
                 </button>

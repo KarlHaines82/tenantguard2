@@ -287,7 +287,7 @@ export default function Home({ recentPosts }: { recentPosts: any[] }) {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <motion.div className="flex items-center justify-between mb-6" initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4 }}>
                 <h2 className="text-lg font-bold text-gray-900 tracking-tight">Latest from the Blog</h2>
-                <Link href="/blog" className="text-sm text-primary hover:underline flex items-center gap-1 group">
+                <Link href="/blog" className="text-sm text-red-800 hover:underline flex items-center gap-1 group">
                   View all
                   <ArrowRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
                 </Link>
