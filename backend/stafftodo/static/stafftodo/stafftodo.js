@@ -131,7 +131,7 @@
   });
 
   /* ── Init ───────────────────────────────────────────── */
-  document.addEventListener('DOMContentLoaded', function () {
+  function init() {
     const launcher = document.getElementById('todo-launcher');
     const overlay  = document.getElementById(OVERLAY_ID);
     const closeBtn = document.querySelector('#' + PANEL_ID + ' .td-panel-close');
@@ -139,5 +139,11 @@
     if (launcher) launcher.addEventListener('click', openPanel);
     if (overlay)  overlay.addEventListener('click', closePanel);
     if (closeBtn) closeBtn.addEventListener('click', closePanel);
-  });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
 })();
