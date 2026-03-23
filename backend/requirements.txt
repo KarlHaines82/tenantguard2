@@ -18,3 +18,4 @@ markdown==3.7
 whitenoise==6.8.2
 stripe==11.4.1
 django-storages[google]==1.14.4
+google-analytics-django

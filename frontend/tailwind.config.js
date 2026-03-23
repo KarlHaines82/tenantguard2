@@ -31,6 +31,25 @@ module.exports = {
         foreground: "var(--color-text)",
         border: "var(--color-border)",
         input: "var(--color-border)",
+        // Workspace design tokens
+        navy: {
+          DEFAULT: "var(--color-navy)",
+          light: "var(--color-navy-light)",
+        },
+        teal: {
+          DEFAULT: "var(--color-teal)",
+          light: "var(--color-teal-light)",
+        },
+        "amber-warn": "var(--color-amber-warn)",
+        "red-urgent": "var(--color-red-urgent)",
+        "green-safe": "var(--color-green-safe)",
+        "warm-white": "var(--color-warm-white)",
+        "warm-gray": "var(--color-warm-gray)",
+      },
+      fontFamily: {
+        heading: "var(--font-heading)",
+        body: "var(--font-body)",
+        mono: "var(--font-mono)",
       },
     },
   },
