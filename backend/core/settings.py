@@ -28,7 +28,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "use-env-to-change-me"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = [
     "localhost",
@@ -82,6 +82,7 @@ INSTALLED_APPS = [
     "chat.apps.ChatConfig",
     "intake.apps.IntakeConfig",
     "stafftodo.apps.StafftodoConfig",
+    "google_analytics_django",
 ]
 
 SITE_ID = 1
@@ -90,6 +91,7 @@ MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
+    "google_analytics_django.middleware.GoogleAnalyticsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -136,8 +138,8 @@ if os.getenv("DB_SSLKEY"):
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("DB_NAME", "tenantguard_db"),
-        "USER": os.getenv("DB_USER", "tenantguard"),
+        "NAME": os.getenv("DB_NAME", "tenantguard_db_name"),
+        "USER": os.getenv("DB_USER", "tenantguard_db_user"),
         "PASSWORD": os.getenv("DB_PASSWORD", ""),
         "HOST": os.getenv("DB_HOST", "localhost"),
         "PORT": os.getenv("DB_PORT", "5432"),
