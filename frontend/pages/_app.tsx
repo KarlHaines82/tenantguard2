@@ -10,7 +10,7 @@ export default function App({Component, pageProps: {session, ...pageProps}}: App
     <SessionProvider session={session}>
       <Component {...pageProps} />
       <Chat />
-      <GoogleAnalytics gaId="G-VSHHRG05DN" />
+      <GoogleAnalytics gaId="G-M5KYBSSVRK" />
       <StaffTodoWidget />
     </SessionProvider>
   );
