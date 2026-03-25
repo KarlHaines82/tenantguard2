@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Head from 'next/head'
 import { GetServerSideProps } from 'next'
 import { Badge } from '@/components/ui/badge'
@@ -8,6 +8,7 @@ import Navbar from '@/components/Navbar'
 import Link from 'next/link'
 import { getPost, createComment, fixMediaUrl } from '@/lib/api'
 import { useSession, signIn } from 'next-auth/react'
+import { trackBlogPostView, trackCommentSubmit } from '@/lib/analytics'
 
 interface Comment {
   id: number
@@ -38,6 +39,10 @@ export default function BlogPost({ post: initialPost }: { post: PostDetail }) {
   const [comment, setComment] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  useEffect(() => {
+    trackBlogPostView(post.slug, post.title)
+  }, [post.slug, post.title])
+
   const handleCommentSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!session) {
@@ -50,6 +55,7 @@ export default function BlogPost({ post: initialPost }: { post: PostDetail }) {
     try {
       const token = (session as any).access_token
       await createComment(post.slug, comment, token)
+      trackCommentSubmit(post.slug)
       const updatedPost = await getPost(post.slug)
       setPost(updatedPost)
       setComment('')

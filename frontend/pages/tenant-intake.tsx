@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { Spinner } from "@chakra-ui/react";
 import { submitIntake, uploadIntakeDocument, analyzeIntake } from "@/lib/api";
+import { trackIntakeStart, trackIntakeSubmit, trackIntakeAnalysis } from "@/lib/analytics";
 
 const ISSUE_TYPES = [
   { value: "eviction", label: "Eviction / Unlawful Detainer" },
@@ -95,6 +96,10 @@ export default function TenantIntake() {
   const [newFile, setNewFile] = useState<File | null>(null);
   const [newDocType, setNewDocType] = useState("lease");
 
+  useEffect(() => {
+    if (status === "authenticated") trackIntakeStart("tenant");
+  }, [status]);
+
   if (status === "loading") return <Spinner size="lg" />;
 
   const handleFormChange = (
@@ -115,6 +120,7 @@ export default function TenantIntake() {
       const payload = { ...form, role: "tenant" };
       const data = await submitIntake(payload, session!.access_token);
       setSubmissionId(data.id);
+      trackIntakeSubmit("tenant", form.issue_type);
       setStep(2);
     } catch {
       setError("Failed to submit. Please try again.");
@@ -143,6 +149,7 @@ export default function TenantIntake() {
         await uploadIntakeDocument(submissionId!, docType, file, session!.access_token);
       }
       const analysisResult = await analyzeIntake(submissionId!, session!.access_token);
+      trackIntakeAnalysis("tenant");
       setResult(analysisResult);
       setStep(3);
     } catch {
