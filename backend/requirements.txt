@@ -19,3 +19,4 @@ whitenoise==6.8.2
 stripe==11.4.1
 django-storages[google]==1.14.4
 google-analytics-django==0.1.4
+twilio==9.3.6

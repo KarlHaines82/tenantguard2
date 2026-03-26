@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Send, Shield, CheckCircle, AlertTriangle, Loader2, ArrowLeft } from 'lucide-react'
 import Navbar from '@/components/Navbar'
 import { Button } from '@/components/ui/button'
-import { streamIntakeChat, type ChatMessage, type ChatSSEEvent } from '@/lib/api'
+import { getIntakeChatHistory, streamIntakeChat, type ChatMessage, type ChatSSEEvent } from '@/lib/api'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -57,9 +57,17 @@ export default function IntakePage() {
   const [isComplete, setIsComplete] = useState(false)
   const [urgency, setUrgency] = useState<string>('not_urgent')
   const [started, setStarted] = useState(false)
+  const [isRestoring, setIsRestoring] = useState(false)
 
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+
+  // Persist submissionId to localStorage whenever it changes
+  useEffect(() => {
+    if (submissionId) {
+      localStorage.setItem('tg_intake_submission_id', String(submissionId))
+    }
+  }, [submissionId])
 
   // Scroll to bottom whenever messages update
   useEffect(() => {
@@ -74,13 +82,53 @@ export default function IntakePage() {
     el.style.height = `${Math.min(el.scrollHeight, 160)}px`
   }
 
-  // Kick off the conversation once the user is authenticated
+  // On auth, try to restore a previous session before starting fresh
   useEffect(() => {
-    if (status === 'authenticated' && token && !started) {
+    if (status !== 'authenticated' || !token || started) return
+
+    const restore = async () => {
+      setIsRestoring(true)
+      try {
+        const storedId = localStorage.getItem('tg_intake_submission_id')
+        const history = await getIntakeChatHistory(
+          token,
+          storedId ? Number(storedId) : undefined
+        )
+
+        if (history.messages.length > 0) {
+          // Restore conversation from server log
+          setSubmissionId(history.submission_id ?? undefined)
+          setMessages(
+            history.messages.map((m, i) => ({
+              id: `restored-${i}`,
+              role: m.role,
+              content: m.content,
+            }))
+          )
+          setCollectedFields(new Set(history.collected_fields))
+          if (history.status === 'pending' || history.status === 'complete') {
+            setIsComplete(true)
+            setUrgency(history.urgency_level)
+          }
+          setStarted(true) // prevent [START_INTAKE] from firing
+        }
+      } catch {
+        // Ignore restore errors — fall through to fresh start
+      } finally {
+        setIsRestoring(false)
+      }
+    }
+
+    restore()
+  }, [status, token]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Kick off a fresh conversation if nothing was restored
+  useEffect(() => {
+    if (status === 'authenticated' && token && !started && !isRestoring) {
       setStarted(true)
       sendTurn('[START_INTAKE]', true)
     }
-  }, [status, token, started]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [status, token, started, isRestoring]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Send a turn ──────────────────────────────────────────────────────────
 

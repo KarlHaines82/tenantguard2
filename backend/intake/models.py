@@ -89,7 +89,10 @@ class IntakeSubmission(models.Model):
     ]
 
     # ── Core ──────────────────────────────────────────────────────────────
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="intake_submissions")
+    user = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="intake_submissions"
+    )
     role = models.CharField(max_length=20, choices=ROLE_CHOICES)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="draft")
 
@@ -253,3 +256,44 @@ class CaseNotebook(models.Model):
 
     def __str__(self):
         return f"Notebook for {self.submission}"
+
+
+class IntakeChatLog(models.Model):
+    """Permanent, server-side record of every message in every intake conversation."""
+
+    SOURCE_WEB = "web"
+    SOURCE_SMS = "sms"
+    SOURCE_CHOICES = [("web", "Web Chat"), ("sms", "SMS / Text")]
+
+    ROLE_USER = "user"
+    ROLE_ASSISTANT = "assistant"
+    ROLE_CHOICES = [("user", "User"), ("assistant", "Assistant")]
+
+    submission = models.ForeignKey(
+        IntakeSubmission, on_delete=models.CASCADE, related_name="chat_logs"
+    )
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES)
+    content = models.TextField()
+    source = models.CharField(max_length=10, choices=SOURCE_CHOICES, default=SOURCE_WEB)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["created_at"]
+
+    def __str__(self):
+        return f"[{self.source.upper()}] {self.role} — {self.content[:60]}"
+
+
+class SMSSession(models.Model):
+    """Maps an inbound phone number to an active intake submission."""
+
+    phone = models.CharField(max_length=20, unique=True, db_index=True)
+    submission = models.OneToOneField(
+        IntakeSubmission, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name="sms_session"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"SMS {self.phone} → submission #{self.submission_id}"

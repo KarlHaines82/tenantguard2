@@ -326,10 +326,37 @@ MEDIA_ROOT = BASE_DIR / "media"
 # or run `gcloud auth application-default login` and set GCS_MEDIA_BUCKET.
 _GCS_BUCKET = os.environ.get("GCS_MEDIA_BUCKET")
 if _GCS_BUCKET:
-    DEFAULT_FILE_STORAGE = "storages.backends.gcloud.GoogleCloudStorage"
-    GS_BUCKET_NAME = _GCS_BUCKET
-    GS_DEFAULT_ACL = "publicRead"
+    # Use the modern STORAGES dict (required for Django 5.x).
+    # querystring_auth=False → generate plain public HTTPS URLs.
+    # Do NOT set default_acl="publicRead" — that conflicts with Uniform Bucket-Level
+    # Access (GCS default).  Instead grant allUsers Storage Object Viewer at the
+    # bucket IAM level (as documented in docs/gcs-env-setup.md).
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.gcloud.GoogleCloudStorage",
+            "OPTIONS": {
+                "bucket_name": _GCS_BUCKET,
+                "querystring_auth": False,  # public unsigned URLs
+            },
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }
+    GS_BUCKET_NAME = _GCS_BUCKET  # kept for any direct settings reads
     MEDIA_URL = f"https://storage.googleapis.com/{_GCS_BUCKET}/"
+
+# Summernote (inline content image uploads in admin)
+# Organise attachments under blog/content_images/ in whichever storage backend
+# is active (local filesystem in dev, GCS bucket in production).
+SUMMERNOTE_CONFIG = {
+    "summernote": {
+        "width": "100%",
+        "height": "480",
+    },
+    "attachment_upload_to": "blog/content_images/",
+    "attachment_filesize_limit": 5 * 1024 * 1024,  # 5 MB
+}
 
 
 # Default primary key field type

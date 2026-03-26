@@ -106,6 +106,25 @@ export const getIntakePrice = async (token: string) => {
   return response.data as { price_cents: number; price_display: string };
 };
 
+export interface IntakeChatHistory {
+  submission_id: number | null
+  status: string
+  urgency_level: string
+  collected_fields: string[]
+  messages: { role: 'user' | 'assistant'; content: string }[]
+}
+
+export const getIntakeChatHistory = async (
+  token: string,
+  submissionId?: number
+): Promise<IntakeChatHistory> => {
+  const params = submissionId ? `?submission_id=${submissionId}` : ''
+  const response = await api.get(`intake/chat/history/${params}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  return response.data as IntakeChatHistory
+}
+
 export interface ChatMessage {
   role: 'user' | 'assistant'
   content: string

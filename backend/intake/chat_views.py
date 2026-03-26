@@ -4,9 +4,10 @@ from datetime import date
 
 from django.http import StreamingHttpResponse
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import IntakeSubmission
+from .models import IntakeChatLog, IntakeSubmission
 
 # ---------------------------------------------------------------------------
 # System prompt
@@ -241,6 +242,20 @@ class IntakeChatView(APIView):
                 last_name=getattr(request.user, "last_name", ""),
             )
 
+        # Save the new user message to the audit log (skip the internal START signal)
+        new_user_msg = messages[-1] if messages else None
+        if (
+            new_user_msg
+            and new_user_msg.get("role") == "user"
+            and new_user_msg.get("content", "").strip() != "[START_INTAKE]"
+        ):
+            IntakeChatLog.objects.create(
+                submission=submission,
+                role=IntakeChatLog.ROLE_USER,
+                content=new_user_msg["content"],
+                source=IntakeChatLog.SOURCE_WEB,
+            )
+
         # Capture for closure
         sub_id = submission.id
         user = request.user
@@ -273,6 +288,7 @@ class IntakeChatView(APIView):
                 # Accumulate tool calls across streaming chunks
                 # tool_calls_acc: {index: {id, name, arguments}}
                 tool_calls_acc: dict[int, dict] = {}
+                ai_response_text = ""
 
                 for chunk in stream:
                     if not chunk.choices:
@@ -280,8 +296,9 @@ class IntakeChatView(APIView):
                     choice = chunk.choices[0]
                     delta = choice.delta
 
-                    # Stream text content to client
+                    # Stream text content to client and accumulate for log
                     if delta.content:
+                        ai_response_text += delta.content
                         yield f"data: {json.dumps({'type': 'text', 'content': delta.content})}\n\n"
 
                     # Accumulate tool call fragments
@@ -327,6 +344,15 @@ class IntakeChatView(APIView):
 
                         tool_calls_acc = {}
 
+                # Persist the AI response to the audit log
+                if ai_response_text.strip():
+                    IntakeChatLog.objects.create(
+                        submission_id=sub_id,
+                        role=IntakeChatLog.ROLE_ASSISTANT,
+                        content=ai_response_text,
+                        source=IntakeChatLog.SOURCE_WEB,
+                    )
+
                 yield f"data: {json.dumps({'type': 'done'})}\n\n"
 
             except Exception as e:
@@ -336,3 +362,64 @@ class IntakeChatView(APIView):
         response["Cache-Control"] = "no-cache"
         response["X-Accel-Buffering"] = "no"
         return response
+
+
+# ---------------------------------------------------------------------------
+# Collected-fields helper (used by history view + SMS)
+# ---------------------------------------------------------------------------
+
+_TRACKED_FIELDS = [
+    "first_name", "last_name", "phone", "property_address", "county",
+    "landlord_name", "issue_type", "issue_description", "court_date",
+    "notice_date", "urgency_level", "desired_outcome",
+]
+
+
+def get_collected_fields(submission: IntakeSubmission) -> list[str]:
+    """Return which intake fields have been saved for a submission."""
+    return [f for f in _TRACKED_FIELDS if getattr(submission, f, None)]
+
+
+# ---------------------------------------------------------------------------
+# Chat history endpoint  GET /api/intake/chat/history/?submission_id=<id>
+# ---------------------------------------------------------------------------
+
+class IntakeChatHistoryView(APIView):
+    """
+    Returns the full persisted chat log for a submission so the frontend
+    can restore the conversation after a page reload or device restart.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        submission_id = request.query_params.get("submission_id")
+        if not submission_id:
+            # Look for any active draft for this user
+            submission = (
+                IntakeSubmission.objects
+                .filter(user=request.user, status="draft")
+                .order_by("-created_at")
+                .first()
+            )
+            if not submission:
+                return Response({"messages": [], "submission_id": None})
+        else:
+            try:
+                submission = IntakeSubmission.objects.get(
+                    pk=submission_id, user=request.user
+                )
+            except IntakeSubmission.DoesNotExist:
+                return Response({"error": "Not found"}, status=404)
+
+        logs = IntakeChatLog.objects.filter(submission=submission)
+        return Response({
+            "submission_id": submission.id,
+            "status": submission.status,
+            "urgency_level": submission.urgency_level or "not_urgent",
+            "collected_fields": get_collected_fields(submission),
+            "messages": [
+                {"role": log.role, "content": log.content}
+                for log in logs
+            ],
+        })

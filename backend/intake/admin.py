@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import CaseNotebook, IntakeDocument, IntakeSubmission
+from .models import CaseNotebook, IntakeChatLog, IntakeDocument, IntakeSubmission, SMSSession
 
 
 class IntakeDocumentInline(admin.TabularInline):
@@ -109,3 +109,29 @@ class IntakeDocumentAdmin(admin.ModelAdmin):
     list_display = ["id", "submission", "doc_type", "original_filename", "uploaded_at"]
     list_filter = ["doc_type"]
     search_fields = ["original_filename", "submission__first_name", "submission__last_name"]
+
+
+@admin.register(IntakeChatLog)
+class IntakeChatLogAdmin(admin.ModelAdmin):
+    list_display = ["id", "submission", "role", "source", "created_at", "content_preview"]
+    list_filter = ["role", "source", "created_at"]
+    search_fields = ["content", "submission__first_name", "submission__last_name", "submission__phone"]
+    readonly_fields = ["submission", "role", "content", "source", "created_at"]
+    ordering = ["-created_at"]
+
+    def content_preview(self, obj):
+        return obj.content[:80] + "…" if len(obj.content) > 80 else obj.content
+    content_preview.short_description = "Message"
+
+    def has_add_permission(self, request):
+        return False  # Logs are system-generated only
+
+    def has_change_permission(self, request, obj=None):
+        return False  # Immutable audit log
+
+
+@admin.register(SMSSession)
+class SMSSessionAdmin(admin.ModelAdmin):
+    list_display = ["id", "phone", "submission", "created_at", "updated_at"]
+    search_fields = ["phone"]
+    readonly_fields = ["phone", "created_at", "updated_at"]
