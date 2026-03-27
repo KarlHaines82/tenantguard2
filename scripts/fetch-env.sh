@@ -35,3 +35,14 @@ gsutil cp "${GCS_SECRETS_BUCKET}/${DEPLOY_ENV}/backend.env"  ./backend/.env
 gsutil cp "${GCS_SECRETS_BUCKET}/${DEPLOY_ENV}/frontend.env" ./frontend/.env.local
 
 echo "[fetch-env] Done."
+
+echo "[fetch-env] Copying to docker containers..."
+
+docker compose cp frontend/.env.local frontend:.env.local
+docker compose cp backend/.env backend:.env
+
+echo "[fetch-env] Done, restarting containers ..."
+
+docker compose restart
+
+echo "[fetch-env] Finished!"
