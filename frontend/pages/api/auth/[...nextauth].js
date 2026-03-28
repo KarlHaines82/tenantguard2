@@ -54,7 +54,7 @@ const SIGN_IN_PROVIDERS = Object.keys(SIGN_IN_HANDLERS);
 
 /** @type {import('next-auth').AuthOptions} */
 export const authOptions = {
-  secret: process.env.AUTH_SECRET,
+  secret: process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET,
   session: {
     strategy: "jwt",
     maxAge: BACKEND_REFRESH_TOKEN_LIFETIME,
